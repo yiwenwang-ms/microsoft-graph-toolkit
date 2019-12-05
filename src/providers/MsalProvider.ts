@@ -102,6 +102,11 @@ export class MsalProvider extends IProvider {
   private sessionStorageRequestedScopesKey = 'mgt-requested-scopes';
   private sessionStorageDeniedScopesKey = 'mgt-denied-scopes';
 
+  private interactionTimer;
+  private interactionTimerInterval: number = 200;
+  private interactionScopes: object = {};
+  private interactionInProgress: boolean = false;
+
   constructor(config: MsalConfig) {
     super();
     this.initProvider(config);
@@ -160,15 +165,19 @@ export class MsalProvider extends IProvider {
     this._userAgentApplication.logout();
     this.setState(ProviderState.SignedOut);
   }
+
   /**
-   * recieves acess token Promise
+   * receives access token Promise
    *
    * @param {AuthenticationProviderOptions} options
    * @returns {Promise<string>}
    * @memberof MsalProvider
    */
   public async getAccessToken(options: AuthenticationProviderOptions): Promise<string> {
-    const scopes = options ? options.scopes || this.scopes : this.scopes;
+    let scopes = options ? options.scopes || this.scopes : this.scopes;
+    scopes = scopes.map(s => s.toLowerCase());
+    scopes = scopes.filter((s, i) => scopes.indexOf(s) === i);
+
     const accessTokenRequest: AuthenticationParameters = {
       loginHint: this._loginHint,
       scopes
@@ -178,29 +187,46 @@ export class MsalProvider extends IProvider {
       return response.accessToken;
     } catch (e) {
       if (this.requiresInteraction(e)) {
-        if (this._loginType === LoginType.Redirect) {
-          // check if the user denied the scope before
-          if (!this.areScopesDenied(scopes)) {
-            this.setRequestedScopes(scopes);
-            this._userAgentApplication.acquireTokenRedirect(accessTokenRequest);
-          } else {
-            throw e;
-          }
-        } else {
-          try {
-            const response = await this._userAgentApplication.acquireTokenPopup(accessTokenRequest);
-            return response.accessToken;
-          } catch (e) {
-            throw e;
-          }
+        console.log('need token for', scopes);
+        clearTimeout(this.interactionTimer);
+        const promise = this.pushInteractionNeededScope(scopes);
+        this.interactionTimer = setTimeout(() => this.acquireTokenWithInteraction(), this.interactionTimerInterval);
+
+        try {
+          console.log('waiting for token for', scopes);
+          const token = await promise;
+          console.log('got token for', scopes, token);
+          return token;
+        } catch (e) {
+          console.log('something bad happened', scopes, e);
+          throw e;
         }
+
+        // if (this._loginType === LoginType.Redirect) {
+
+        //   console.log('here');
+
+        //   // // check if the user denied the scope before
+        //   // if (!this.areScopesDenied(scopes)) {
+        //   //   this.setRequestedScopes(scopes);
+        //   //   this._userAgentApplication.acquireTokenRedirect(accessTokenRequest);
+        //   // } else {
+        //   //   throw e;
+        //   // }
+        // } else {
+        //   try {
+        //     const response = await this._userAgentApplication.acquireTokenPopup(accessTokenRequest);
+        //     return response.accessToken;
+        //   } catch (e) {
+        //     throw e;
+        //   }
+        // }
       } else {
         // if we don't know what the error is, just ask the user to sign in again
         this.setState(ProviderState.SignedOut);
         throw e;
       }
     }
-    throw null;
   }
   /**
    * sets scopes
@@ -318,6 +344,107 @@ export class MsalProvider extends IProvider {
     return false;
   }
 
+  private async acquireTokenWithInteraction() {
+    // check if the user denied the scope before
+    // if (!this.areScopesDenied(scopes)) {
+    // this.setRequestedScopes(scopes);
+
+    const scopes = Object.keys(this.interactionScopes);
+
+    if (this.interactionInProgress || scopes.length === 0) {
+      return;
+    }
+
+    this.interactionInProgress = true;
+
+    const accessTokenRequest: AuthenticationParameters = {
+      loginHint: this._loginHint,
+      scopes
+    };
+
+    console.log('asking permission for', accessTokenRequest.scopes);
+
+    if (this._loginType === LoginType.Redirect) {
+      this._userAgentApplication.acquireTokenRedirect(accessTokenRequest);
+    } else {
+      const scopePromises = this.interactionScopes;
+      this.interactionScopes = {};
+      try {
+        const response = await this._userAgentApplication.acquireTokenPopup(accessTokenRequest);
+        console.log(response);
+        for (const scope in scopePromises) {
+          if (scopePromises.hasOwnProperty(scope) && scopePromises[scope].resolve) {
+            scopePromises[scope].resolve(response.accessToken);
+          }
+        }
+      } catch (e) {
+        for (const scope in scopePromises) {
+          if (scopePromises.hasOwnProperty(scope) && scopePromises[scope].reject) {
+            scopePromises[scope].reject(e);
+          }
+        }
+      }
+      this.interactionInProgress = false;
+
+      // in case there are other scopes that were added before
+      this.acquireTokenWithInteraction();
+    }
+  }
+
+  private pushInteractionNeededScope(scopes: string[]): Promise<string> {
+    if (scopes.length === 0) {
+      return null;
+    }
+
+    let promiseObj: any;
+
+    // try to find a scope that might already have a promise and just return the same promise
+    for (let scope of scopes) {
+      scope = scope.toLowerCase();
+      if (this.interactionScopes[scope] && this.interactionScopes[scope].promise) {
+        console.log('found a promise', scopes, scope);
+        promiseObj = this.interactionScopes[scope];
+        break;
+      }
+    }
+
+    // if one of the scopes already has a promise, just mark the other scopes true
+    // so we know there is a promise somewhere that will resolve for them
+    if (promiseObj) {
+      console.log('already have a promise for scopes', scopes);
+      for (let scope of scopes) {
+        scope = scope.toLowerCase();
+        if (!this.interactionScopes[scope]) {
+          console.log('marking scope true', scope);
+          this.interactionScopes[scope] = true;
+        }
+      }
+      return promiseObj.promise;
+    }
+
+    // if there is no existing promise, let's create a new one
+    promiseObj = {};
+
+    promiseObj.promise = new Promise<string>((resolve, reject) => {
+      promiseObj.resolve = resolve;
+      promiseObj.reject = reject;
+    });
+
+    console.log('created new promise', scopes);
+
+    this.interactionScopes[scopes[0].toLowerCase()] = promiseObj;
+
+    for (let i = 1; i < scopes.length; i++) {
+      const scope = scopes[i].toLowerCase();
+      if (!this.interactionScopes[scope]) {
+        console.log('marking scope true', scope);
+        this.interactionScopes[scope] = true;
+      }
+    }
+
+    return promiseObj.promise;
+  }
+
   private initProvider(config: MsalConfig) {
     this.scopes = typeof config.scopes !== 'undefined' ? config.scopes : ['user.read'];
     this._loginType = typeof config.loginType !== 'undefined' ? config.loginType : LoginType.Redirect;
@@ -357,6 +484,7 @@ export class MsalProvider extends IProvider {
   }
 
   private tokenReceivedCallback(response: AuthResponse) {
+    console.log('success', JSON.stringify(response, null, 2));
     if (response.tokenType === 'id_token') {
       this.setState(ProviderState.SignedIn);
     }
@@ -365,6 +493,7 @@ export class MsalProvider extends IProvider {
   }
 
   private errorReceivedCallback(authError: AuthError, accountState: string) {
+    console.log('error', JSON.stringify(authError, null, 2), JSON.stringify(accountState, null, 2));
     const requestedScopes = this.getRequestedScopes();
     if (requestedScopes) {
       this.addDeniedScopes(requestedScopes);
