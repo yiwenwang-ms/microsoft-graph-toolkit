@@ -8,7 +8,7 @@
 // @ts-ignore: Unreachable code error
 import { applyPolyfill, rerenderInnerHTML } from 'custom-elements-hmr-polyfill';
 
-rerenderInnerHTML();
+// rerenderInnerHTML();
 applyPolyfill();
 
 // // @ts-ignore: Unreachable code error

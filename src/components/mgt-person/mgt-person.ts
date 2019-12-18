@@ -142,6 +142,7 @@ export class MgtPerson extends MgtTemplatedComponent {
 
     if ((name === 'person-query' || name === 'user-id') && oldval !== newval) {
       this.personDetails = null;
+      console.log('loadData 1');
       this.loadData();
     }
   }
@@ -158,7 +159,11 @@ export class MgtPerson extends MgtTemplatedComponent {
 
   public firstUpdated() {
     console.log('firstUpdated');
-    Providers.onProviderUpdated(() => this.loadData());
+    Providers.onProviderUpdated(() => {
+      console.log('loadData 3');
+      this.loadData();
+    });
+    console.log('loadData 2');
     this.loadData();
   }
 
@@ -182,6 +187,13 @@ export class MgtPerson extends MgtTemplatedComponent {
     console.log('disconnectedCallback');
     window.removeEventListener('click', this.handleWindowClick);
     super.disconnectedCallback();
+  }
+
+  public shouldUpdate(changedProperties) {
+    changedProperties.forEach((oldValue, propName) => {
+      console.log(`${propName} changed. oldValue: ${oldValue}`);
+    });
+    return changedProperties.has('personImage') || changedProperties.has('personDetails');
   }
 
   /**
@@ -221,17 +233,17 @@ export class MgtPerson extends MgtTemplatedComponent {
    *
    * * @param changedProperties Map of changed properties with old values
    */
-  protected updated(changedProps: PropertyValues) {
-    super.updated(changedProps);
-    console.log('updated', changedProps);
+  // protected updated(changedProps: PropertyValues) {
+  //   super.updated(changedProps);
+  //   console.log('updated', changedProps);
 
-    const initials = this.renderRoot.querySelector('.initials-text') as HTMLElement;
-    if (initials && initials.parentNode && (initials.parentNode as HTMLElement).getBoundingClientRect) {
-      const parent = initials.parentNode as HTMLElement;
-      const height = parent.getBoundingClientRect().height;
-      initials.style.fontSize = `${height * 0.5}px`;
-    }
-  }
+  //   const initials = this.renderRoot.querySelector('.initials-text') as HTMLElement;
+  //   if (initials && initials.parentNode && (initials.parentNode as HTMLElement).getBoundingClientRect) {
+  //     const parent = initials.parentNode as HTMLElement;
+  //     const height = parent.getBoundingClientRect().height;
+  //     initials.style.fontSize = `${height * 0.5}px`;
+  //   }
+  // }
 
   private handleWindowClick(e: MouseEvent) {
     if (this.isPersonCardVisible && e.target !== this) {
@@ -240,7 +252,6 @@ export class MgtPerson extends MgtTemplatedComponent {
   }
 
   private async loadData() {
-    console.log('loadData');
     const provider = Providers.globalProvider;
 
     if (!provider || provider.state === ProviderState.Loading) {
@@ -258,7 +269,7 @@ export class MgtPerson extends MgtTemplatedComponent {
       // in some cases we might only have name or email, but need to find the image
       // use @ for the image value to search for an image
       if (this.personImage && this.personImage === '@' && !(this.personDetails as any).personImage) {
-        this.loadImage();
+        // this.loadImage();
       }
       return;
     }
@@ -275,7 +286,6 @@ export class MgtPerson extends MgtTemplatedComponent {
       }
 
       const response = await batch.execute();
-      console.log('res', response);
       this.personDetails = response.user;
       this.personImage = response.photo;
       (this.personDetails as any).personImage = response.photo;
@@ -285,7 +295,7 @@ export class MgtPerson extends MgtTemplatedComponent {
         const person = people[0] as MicrosoftGraph.Person;
         this.personDetails = person;
 
-        this.loadImage();
+        // this.loadImage();
       }
     }
   }
@@ -449,6 +459,7 @@ export class MgtPerson extends MgtTemplatedComponent {
       `;
     }
 
+    console.log('render empty Image');
     return this.renderEmptyImage();
   }
 
