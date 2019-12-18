@@ -5,6 +5,20 @@
  * -------------------------------------------------------------------------------------------
  */
 
+// @ts-ignore: Unreachable code error
+import { applyPolyfill, rerenderInnerHTML } from 'custom-elements-hmr-polyfill';
+
+rerenderInnerHTML();
+applyPolyfill();
+
+// // @ts-ignore: Unreachable code error
+// if (module.hot) {
+//   // @ts-ignore: Unreachable code error
+//   console.log('module.hot', module.hot);
+//   // @ts-ignore: Unreachable code error
+//   module.hot.accept();
+// }
+
 export * from './components/components';
 export * from './components/providers/providers';
 export * from './Providers';

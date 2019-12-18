@@ -125,6 +125,7 @@ export class MgtPerson extends MgtTemplatedComponent {
 
   constructor() {
     super();
+    console.log('constructor');
     this.handleWindowClick = this.handleWindowClick.bind(this);
   }
 
@@ -156,6 +157,7 @@ export class MgtPerson extends MgtTemplatedComponent {
    */
 
   public firstUpdated() {
+    console.log('firstUpdated');
     Providers.onProviderUpdated(() => this.loadData());
     this.loadData();
   }
@@ -166,6 +168,7 @@ export class MgtPerson extends MgtTemplatedComponent {
    * @memberof MgtPerson
    */
   public connectedCallback() {
+    console.log('connectedCallback');
     super.connectedCallback();
     window.addEventListener('click', this.handleWindowClick);
   }
@@ -176,6 +179,7 @@ export class MgtPerson extends MgtTemplatedComponent {
    * @memberof MgtPerson
    */
   public disconnectedCallback() {
+    console.log('disconnectedCallback');
     window.removeEventListener('click', this.handleWindowClick);
     super.disconnectedCallback();
   }
@@ -186,6 +190,7 @@ export class MgtPerson extends MgtTemplatedComponent {
    * trigger the element to update.
    */
   public render() {
+    console.log('render');
     const image = this.getImage();
     const person =
       this.renderTemplate('default', { person: this.personDetails, personImage: image }) ||
@@ -218,6 +223,7 @@ export class MgtPerson extends MgtTemplatedComponent {
    */
   protected updated(changedProps: PropertyValues) {
     super.updated(changedProps);
+    console.log('updated', changedProps);
 
     const initials = this.renderRoot.querySelector('.initials-text') as HTMLElement;
     if (initials && initials.parentNode && (initials.parentNode as HTMLElement).getBoundingClientRect) {
@@ -234,6 +240,7 @@ export class MgtPerson extends MgtTemplatedComponent {
   }
 
   private async loadData() {
+    console.log('loadData');
     const provider = Providers.globalProvider;
 
     if (!provider || provider.state === ProviderState.Loading) {
@@ -268,7 +275,7 @@ export class MgtPerson extends MgtTemplatedComponent {
       }
 
       const response = await batch.execute();
-
+      console.log('res', response);
       this.personDetails = response.user;
       this.personImage = response.photo;
       (this.personDetails as any).personImage = response.photo;

@@ -657,7 +657,7 @@ export class MgtTasks extends MgtTemplatedComponent {
               }}"
             >
               <span class="TaskIcon">\uE710</span>
-              <span>Add</span>
+              <span>Add x</span>
             </button>
           `;
 

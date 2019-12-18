@@ -80,6 +80,7 @@ export abstract class MgtBaseComponent extends LitElement {
 
   constructor() {
     super();
+    console.log('baseComp ctor');
     if (this.isShadowRootDisabled()) {
       (this as any)._needsShimAdoptedStyleSheets = true;
     }
