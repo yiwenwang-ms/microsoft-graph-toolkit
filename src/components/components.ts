@@ -22,7 +22,3 @@ export * from './mgt-people/mgt-people';
 export * from './mgt-person-card/mgt-person-card';
 export * from './mgt-person/mgt-person';
 export * from './mgt-tasks/mgt-tasks';
-
-// Sub-Components, not for export!
-// export * from './sub-components/mgt-dot-options/mgt-dot-options';
-// export * from './sub-components/mgt-arrow-options/mgt-arrow-options';

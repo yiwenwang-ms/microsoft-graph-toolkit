@@ -1,0 +1,133 @@
+/**
+ * -------------------------------------------------------------------------------------------
+ * Copyright (c) Microsoft Corporation.  All Rights Reserved.  Licensed under the MIT License.
+ * See License in the project root for license information.
+ * -------------------------------------------------------------------------------------------
+ */
+
+@import '../../../styles/shared-styles.scss';
+@import '../../../../node_modules/office-ui-fabric-core/dist/sass/References';
+
+.root {
+  justify-content: center;
+  align-items: center;
+
+  min-height: 36px;
+  width: 100%;
+  border-radius: 2px;
+
+  user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  position: relative;
+  margin: 0;
+  padding: 0;
+
+  // &:focus-visible {
+  //   content: '';
+  //   position: absolute;
+  //   left: 2px;
+  //   top: 2px;
+  //   bottom: 2px;
+  //   right: 2px;
+  //   z-index: 1;
+  //   border-width: initial;
+  //   border-style: none;
+  //   border-color: initial;
+  //   border-image: initial;
+  //   outline: red solid 1px;
+  // }
+
+  cursor: pointer;
+
+  &.no-content {
+    .content {
+      display: flex;
+      padding: 0 19px;
+
+      justify-content: center;
+      align-items: center;
+    }
+  }
+
+  &.default {
+    background: var(--button-background, $ms-color-white);
+    border: var(--button-border, none);
+    color: var(--color, $ms-color-neutralPrimary);
+
+    &:hover {
+      background: var(--button-hover-background, $ms-color-neutralLighter);
+    }
+
+    &:active {
+      background: var(--button-active-background, $ms-color-neutralLight);
+    }
+  }
+
+  &.command {
+    background: var(--button-background, $ms-color-white);
+    border: var(--button-border, none);
+    color: var(--color, $ms-color-neutralPrimary);
+
+    &:hover {
+      background: var(--button-hover-background, $ms-color-neutralLighter);
+    }
+
+    &:active {
+      background: var(--button-active-background, $ms-color-neutralLight);
+    }
+
+    .content {
+      justify-content: start;
+      padding: 0 4px;
+
+      span {
+        font-weight: 400;
+        min-width: 136px;
+      }
+
+      mgt-icon {
+        color: var(--button-active-color, $ms-color-communicationPrimary);
+      }
+    }
+  }
+
+  &.primary {
+    background: var(--button-background, $ms-color-communicationPrimary);
+    border: var(--button-border, solid 1px rgba(0, 0, 0, 0));
+    color: var(--color, #ffffff);
+
+    &:hover {
+      background: var(--button-hover-background, $ms-color-communicationShade10);
+    }
+
+    &:active {
+      background: var(--button-active-background, $ms-color-communicationShade20);
+    }
+  }
+
+  &.disabled {
+    background: var(--button-background, $ms-color-neutralLighter);
+    border: var(--button-border, none);
+    color: var(--color, $ms-color-neutralTertiary);
+  }
+
+  .content {
+    .with-text {
+      margin-right: 8px;
+    }
+
+    span {
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.1px;
+      line-height: 14px;
+      white-space: nowrap;
+      text-align: left;
+    }
+
+    mgt-icon {
+      color: var(--button-active-color, inherit);
+    }
+  }
+}

@@ -122,11 +122,6 @@
     "ancestorSeparator": " > ",
     "usePathForSuiteName": "true"
   },
-  "husky": {
-    "hooks": {
-      "pre-commit": "npm run prettier:check"
-    }
-  },
   "prettier": {
     "printWidth": 120,
     "singleQuote": true

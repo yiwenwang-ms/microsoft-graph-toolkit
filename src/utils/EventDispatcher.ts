@@ -5,8 +5,6 @@
  * -------------------------------------------------------------------------------------------
  */
 
-import { EventHandler } from './IProvider';
-
 /**
  * Provider EventDispatcher
  *
@@ -54,3 +52,8 @@ export class EventDispatcher<E> {
     }
   }
 }
+
+/**
+ * An EventHandler for custom events
+ */
+export type EventHandler<E> = (event: E) => void;

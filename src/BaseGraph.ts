@@ -70,6 +70,39 @@ export abstract class BaseGraph {
     return request;
   }
 
+  public async getAllPages(request: GraphRequest, version: string = 'v1.0', maxPages: number = 0): Promise<any> {
+    console.log('starting bulk request');
+
+    let response = await request.get();
+    const nextLinkString = '@odata.nextLink';
+
+    console.log('first response', response);
+
+    if (response && Array.isArray(response.value) && response[nextLinkString]) {
+      let pageCount = 1;
+      let page = response;
+
+      while ((pageCount < maxPages || maxPages <= 0) && page && page[nextLinkString]) {
+        pageCount++;
+        const nextResource = page[nextLinkString].split(version)[1];
+        page = await this.api(nextResource)
+          .version(version)
+          .get();
+
+        console.log('next response', response);
+
+        if (page && page.value && page.value.length) {
+          page.value = response.value.concat(page.value);
+          response = page;
+        }
+      }
+    }
+
+    console.log('final response', response);
+
+    return response;
+  }
+
   /**
    * creates batch request
    *

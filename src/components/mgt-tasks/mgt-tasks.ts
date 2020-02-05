@@ -5,9 +5,9 @@
  * -------------------------------------------------------------------------------------------
  */
 
-import { Person, PlannerAssignments, PlannerTask, User } from '@microsoft/microsoft-graph-types';
+import { Person, PlannerAssignments, PlannerBucket, PlannerTask, User } from '@microsoft/microsoft-graph-types';
 import { Contact, OutlookTask, OutlookTaskFolder } from '@microsoft/microsoft-graph-types-beta';
-import { customElement, html, property } from 'lit-element';
+import { customElement, html, property, TemplateResult } from 'lit-element';
 import { classMap } from 'lit-html/directives/class-map';
 import { repeat } from 'lit-html/directives/repeat';
 import { Providers } from '../../Providers';
@@ -17,14 +17,19 @@ import { MgtPeoplePicker } from '../mgt-people-picker/mgt-people-picker';
 import { MgtTemplatedComponent } from '../templatedComponent';
 import { PersonCardInteraction } from './../PersonCardInteraction';
 import { styles } from './mgt-tasks-css';
-import { ITask, ITaskFolder, ITaskGroup, ITaskSource, PlannerTaskSource, TodoTaskSource } from './task-sources';
+import { ITask, ITaskFolder, ITaskGroup, ITaskSource, TodoTaskSource } from './task-sources';
 
 import { ComponentMediaQuery } from '../baseComponent';
+import '../common/mgt-flyout/mgt-flyout';
 import { MgtPeople } from '../mgt-people/mgt-people';
 import '../mgt-person/mgt-person';
 import '../sub-components/mgt-arrow-options/mgt-arrow-options';
-import '../sub-components/mgt-dot-options/mgt-dot-options';
-import '../sub-components/mgt-flyout/mgt-flyout';
+import { PlannerTaskSource } from './taskSource/PlannerTaskSource';
+import { ToDoTaskSource } from './taskSource/TodoTaskSource';
+
+import '../common/mgt-button/mgt-button';
+import './parts/mgt-todo-new-task/mgt-todo-new-task';
+import './parts/mgt-todo-task/mgt-todo-task';
 
 /**
  * Defines how a person card is shown when a user interacts with
@@ -201,6 +206,19 @@ export class MgtTasks extends MgtTemplatedComponent {
    */
   public taskFilter: (task: PlannerTask | OutlookTask) => boolean;
 
+
+  private todo: ToDoTaskSource;
+  private planner: PlannerTaskSource;
+
+
+
+  @property() private tasks: Array<PlannerTask | OutlookTask>;
+  @property() private folders: Array<OutlookTaskFolder | PlannerBucket>;
+  @property() private groups: Array<OutlookTaskFolder | PlannerBucket>;
+  @property() private currentFolder: OutlookTaskFolder | PlannerBucket;
+
+
+
   @property() private _isNewTaskVisible: boolean = false;
   @property() private _newTaskBeingAdded: boolean = false;
   @property() private _newTaskName: string = '';
@@ -226,6 +244,8 @@ export class MgtTasks extends MgtTemplatedComponent {
   private providerUpdateCallback: () => void | any;
   private handleWindowClick: (event: MouseEvent) => void;
   private previousMediaQuery: ComponentMediaQuery;
+
+  private loadingMore : boolean;
 
   constructor() {
     super();
@@ -269,31 +289,31 @@ export class MgtTasks extends MgtTemplatedComponent {
    */
   public attributeChangedCallback(name: string, oldVal: string, newVal: string) {
     super.attributeChangedCallback(name, oldVal, newVal);
-    if (name === 'data-source') {
-      if (this.dataSource === TasksSource.planner) {
-        this._currentGroup = this.initialId;
-        this._currentFolder = this.initialBucketId;
-      } else if (this.dataSource === TasksSource.todo) {
-        this._currentGroup = null;
-        this._currentFolder = this.initialId;
-      }
+    // if (name === 'data-source') {
+    //   if (this.dataSource === TasksSource.planner) {
+    //     this._currentGroup = this.initialId;
+    //     this._currentFolder = this.initialBucketId;
+    //   } else if (this.dataSource === TasksSource.todo) {
+    //     this._currentGroup = null;
+    //     this._currentFolder = this.initialId;
+    //   }
 
-      this._newTaskFolderId = '';
-      this._newTaskGroupId = '';
-      this._newTaskDueDate = null;
-      this._newTaskName = '';
-      this._newTaskBeingAdded = false;
+    //   this._newTaskFolderId = '';
+    //   this._newTaskGroupId = '';
+    //   this._newTaskDueDate = null;
+    //   this._newTaskName = '';
+    //   this._newTaskBeingAdded = false;
 
-      this._tasks = [];
-      this._folders = [];
-      this._groups = [];
+    //   this._tasks = [];
+    //   this._folders = [];
+    //   this._groups = [];
 
-      this._hasDoneInitialLoad = false;
-      this._inTaskLoad = false;
-      this._todoDefaultSet = false;
+    //   this._hasDoneInitialLoad = false;
+    //   this._inTaskLoad = false;
+    //   this._todoDefaultSet = false;
 
-      this.loadTasks();
-    }
+    //   this.loadTasks();
+    // }
   }
 
   /**
@@ -306,17 +326,17 @@ export class MgtTasks extends MgtTemplatedComponent {
    * * @param _changedProperties Map of changed properties with old values
    */
   protected firstUpdated() {
-    if (this.initialId && !this._currentGroup) {
-      if (this.dataSource === TasksSource.planner) {
-        this._currentGroup = this.initialId;
-      } else if (this.dataSource === TasksSource.todo) {
-        this._currentFolder = this.initialId;
-      }
-    }
+    // if (this.initialId && !this._currentGroup) {
+    //   if (this.dataSource === TasksSource.planner) {
+    //     this._currentGroup = this.initialId;
+    //   } else if (this.dataSource === TasksSource.todo) {
+    //     this._currentFolder = this.initialId;
+    //   }
+    // }
 
-    if (this.dataSource === TasksSource.planner && this.initialBucketId && !this._currentFolder) {
-      this._currentFolder = this.initialBucketId;
-    }
+    // if (this.dataSource === TasksSource.planner && this.initialBucketId && !this._currentFolder) {
+    //   this._currentFolder = this.initialBucketId;
+    // }
 
     this.loadTasks();
   }
@@ -327,14 +347,14 @@ export class MgtTasks extends MgtTemplatedComponent {
    * trigger the element to update.
    */
   protected render() {
-    let tasks = this._tasks
-      .filter(task => this.isTaskInSelectedGroupFilter(task))
-      .filter(task => this.isTaskInSelectedFolderFilter(task))
-      .filter(task => !this._hiddenTasks.includes(task.id));
+    // let tasks = this._tasks
+    //   .filter(task => this.isTaskInSelectedGroupFilter(task))
+    //   .filter(task => this.isTaskInSelectedFolderFilter(task))
+    //   .filter(task => !this._hiddenTasks.includes(task.id));
 
-    if (this.taskFilter) {
-      tasks = tasks.filter(task => this.taskFilter(task._raw));
-    }
+    // if (this.taskFilter) {
+    //   tasks = tasks.filter(task => this.taskFilter(task._raw));
+    // }
 
     const loadingTask = this._inTaskLoad && !this._hasDoneInitialLoad ? this.renderLoadingTask() : null;
 
@@ -343,18 +363,33 @@ export class MgtTasks extends MgtTemplatedComponent {
     if (!this.hideHeader) {
       header = html`
         <div class="Header">
-          ${this.renderPlanOptions()}
+          ${this.renderHeader()}
         </div>
       `;
     }
 
+    const newTask = this._isNewTaskVisible ? html`
+    <div class="NewTaskRoot">
+      ${this.renderNewTask2()}
+    </div>` : null;
+
     return html`
-      ${header}
-      <div class="Tasks">
-        ${this._isNewTaskVisible ? this.renderNewTask() : null} ${loadingTask}
-        ${repeat(tasks, task => task.id, task => this.renderTask(task))}
+      <div class="root">
+        ${header}
+        ${newTask} 
+        <div class="Tasks" @scroll=${this.handleScroll}>
+          ${loadingTask}
+          ${this.tasks ? repeat(this.tasks, task => task.id, task => this.renderTask(task)): null}
+        </div>
       </div>
     `;
+  }
+
+  private handleScroll(e: Event){
+    const el = e.target as HTMLElement;
+    if (el.scrollTop + el.clientHeight >= el.scrollHeight - 10) {
+      this.loadMoreTasks();
+    }
   }
 
   private onResize() {
@@ -371,10 +406,10 @@ export class MgtTasks extends MgtTemplatedComponent {
    * @memberof MgtTasks
    */
   private async loadTasks() {
-    const ts = this.getTaskSource();
-    if (!ts) {
-      return;
-    }
+    // const ts = this.getTaskSource();
+    // if (!ts) {
+    //   return;
+    // }
 
     const provider = Providers.globalProvider;
     if (!provider || provider.state !== ProviderState.SignedIn) {
@@ -382,30 +417,97 @@ export class MgtTasks extends MgtTemplatedComponent {
     }
 
     this._inTaskLoad = true;
-    let meTask;
-    if (!this._me) {
-      const graph = provider.graph.forComponent(this);
-      meTask = graph.getMe();
+
+    const graph = provider.graph.forComponent(this);
+
+    if (this.dataSource === TasksSource.planner) {
+      this.planner = new PlannerTaskSource(graph);
+      this.planner.onUpdated(() => {
+
+      })
+
+      const plans = await this.planner.getPlans();
+
+      this.groups = plans;
+
+
+
+    } else {
+      this.todo = new ToDoTaskSource(graph);
+      this.todo.onUpdated(() => {
+        console.log('updated');
+        this.loadFolder(this.currentFolder as OutlookTaskFolder);
+      })
+  
+      const folders = await this.todo.getFolders();
+  
+      const currentFolder = folders.find(f => f.isDefaultFolder) ?? folders[0] ?? null;
+  
+      if (!currentFolder) {
+        debugger;
+      }
+  
+      
+      this.folders = folders;
+      this.loadFolder(currentFolder);
+  
+          this._inTaskLoad = true;
+      this._hasDoneInitialLoad = true;
     }
 
-    if (this.groupId && this.dataSource === TasksSource.planner) {
-      await this._loadTasksForGroup(ts);
-    } else if (this.targetId) {
-      if (this.dataSource === TasksSource.todo) {
-        await this._loadTargetTodoTasks(ts);
-      } else {
-        await this._loadTargetPlannerTasks(ts);
-      }
-    } else {
-      await this._loadAllTasks(ts);
+    
+    return;
+
+    let meTask;
+    if (!this._me) {
+      meTask = graph.getMe();
+
+      //
+      // const tasks = await temp.getTasks();
+      // console.log(tasks);
     }
+
+    // if (this.groupId && this.dataSource === TasksSource.planner) {
+    //   await this._loadTasksForGroup(ts);
+    // } else if (this.targetId) {
+    //   if (this.dataSource === TasksSource.todo) {
+    //     await this._loadTargetTodoTasks(ts);
+    //   } else {
+    //     await this._loadTargetPlannerTasks(ts);
+    //   }
+    // } else {
+    //   await this._loadAllTasks(ts);
+    // }
 
     if (meTask) {
       this._me = await meTask;
+      meTask = null;
     }
 
     this._inTaskLoad = false;
     this._hasDoneInitialLoad = true;
+  }
+
+  private async loadFolder(folder: OutlookTaskFolder) {
+    if (this.todo) {
+
+      this.currentFolder = folder;
+      // TODO show loading if necessary if loading too long
+      const tasks = await this.todo.getTasks(this.currentFolder.id);
+      this.tasks = tasks;
+    }
+  }
+
+  private async loadMoreTasks() {
+    if (!this.loadingMore && this.todo && this.todo.hasMoreForFolder(this.currentFolder.id)) {
+      this.loadingMore = true;
+      const tasks = await this.todo.loadMoreAndGetTasks(this.currentFolder.id);
+      if (tasks !== this.tasks) {
+        this.tasks = tasks;
+      }
+      this.loadingMore = false;
+    }
+
   }
 
   private async _loadTargetTodoTasks(ts: ITaskSource) {
@@ -509,39 +611,43 @@ export class MgtTasks extends MgtTemplatedComponent {
     this.isNewTaskVisible = false;
   }
 
-  private async completeTask(task: ITask) {
-    const ts = this.getTaskSource();
-    if (!ts) {
-      return;
-    }
-    this._loadingTasks = [...this._loadingTasks, task.id];
-    await ts.setTaskComplete(task.id, task.eTag);
-    await this.loadTasks();
-    this._loadingTasks = this._loadingTasks.filter(id => id !== task.id);
+  private async completeTask(task: PlannerTask | OutlookTask) {
+    // TODO
+    // const ts = this.getTaskSource();
+    // if (!ts) {
+    //   return;
+    // }
+    // this._loadingTasks = [...this._loadingTasks, task.id];
+    // await ts.setTaskComplete(task.id, task.eTag);
+    // await this.loadTasks();
+    // this._loadingTasks = this._loadingTasks.filter(id => id !== task.id);
   }
 
-  private async uncompleteTask(task: ITask) {
-    const ts = this.getTaskSource();
-    if (!ts) {
-      return;
-    }
+  private async uncompleteTask(task: PlannerTask | OutlookTask) {
+    // TODO
+    // const ts = this.getTaskSource();
+    // if (!ts) {
+    //   return;
+    // }
 
-    this._loadingTasks = [...this._loadingTasks, task.id];
-    await ts.setTaskIncomplete(task.id, task.eTag);
-    await this.loadTasks();
-    this._loadingTasks = this._loadingTasks.filter(id => id !== task.id);
+    // this._loadingTasks = [...this._loadingTasks, task.id];
+    // await ts.setTaskIncomplete(task.id, task.eTag);
+    // await this.loadTasks();
+    // this._loadingTasks = this._loadingTasks.filter(id => id !== task.id);
   }
 
-  private async removeTask(task: ITask) {
-    const ts = this.getTaskSource();
-    if (!ts) {
-      return;
-    }
+  private async removeTask(task: PlannerTask | OutlookTask) {
+// TODO
 
-    this._hiddenTasks = [...this._hiddenTasks, task.id];
-    await ts.removeTask(task.id, task.eTag);
-    await this.loadTasks();
-    this._hiddenTasks = this._hiddenTasks.filter(id => id !== task.id);
+    // const ts = this.getTaskSource();
+    // if (!ts) {
+    //   return;
+    // }
+
+    // this._hiddenTasks = [...this._hiddenTasks, task.id];
+    // await ts.removeTask(task.id, task.eTag);
+    // await this.loadTasks();
+    // this._hiddenTasks = this._hiddenTasks.filter(id => id !== task.id);
   }
 
   private async assignPeople(task: ITask, people: Array<User | Person | Contact>) {
@@ -634,13 +740,7 @@ export class MgtTasks extends MgtTemplatedComponent {
     }
   }
 
-  private renderPlanOptions() {
-    const p = Providers.globalProvider;
-
-    if (!p || p.state !== ProviderState.SignedIn) {
-      return null;
-    }
-
+  private renderHeader() {
     if (this._inTaskLoad && !this._hasDoneInitialLoad) {
       return html`
         <span class="LoadingHeader"></span>
@@ -650,17 +750,13 @@ export class MgtTasks extends MgtTemplatedComponent {
     const addButton =
       this.readOnly || this._isNewTaskVisible
         ? null
-        : html`
-            <button
-              class="AddBarItem NewTaskButton"
-              @click="${() => {
-                this.isNewTaskVisible = !this.isNewTaskVisible;
-              }}"
-            >
-              <span class="TaskIcon">\uE710</span>
-              <span>Add</span>
-            </button>
-          `;
+        : html`<mgt-button 
+                class="AddButton"
+                text="Add"
+                icon="Add" 
+                type="primary"
+                @click="${() => { this.isNewTaskVisible = !this.isNewTaskVisible; }}">
+                </mgt-button>`;
 
     if (this.dataSource === TasksSource.planner) {
       const currentGroup = this._groups.find(d => d.id === this._currentGroup) || {
@@ -720,35 +816,36 @@ export class MgtTasks extends MgtTemplatedComponent {
         ${addButton}
       `;
     } else {
-      const folder = this._folders.find(d => d.id === this.targetId) || { name: this.res.BUCKETS_SELF_ASSIGNED };
-      const currentFolder = this._folders.find(d => d.id === this._currentFolder) || {
-        name: this.res.BUCKETS_SELF_ASSIGNED
-      };
+      // const folder = this._folders.find(d => d.id === this.targetId) || { name: this.res.BUCKETS_SELF_ASSIGNED };
+      // const currentFolder = this._folders.find(d => d.id === this._currentFolder) || {
+      //   name: this.res.BUCKETS_SELF_ASSIGNED
+      // };
 
-      const folderOptions = {};
+      let folderSelect: TemplateResult;
+      
+      if (this.folders) {
+        const folderOptions = {};
 
-      for (const d of this._folders) {
-        folderOptions[d.name] = () => {
-          this._currentFolder = d.id;
-        };
+        for (const f of this.folders) {
+          folderOptions[f.name] = () => {
+            this.loadFolder(f as OutlookTaskFolder);
+          };
+        }
+  
+        folderSelect = this.targetId
+          ? html`
+              <span class="PlanTitle">
+                ${this.currentFolder.name}
+              </span>
+            `
+          : html`
+              <mgt-arrow-options .value="${this.currentFolder.name}" .options="${folderOptions}"></mgt-arrow-options>
+            `;
       }
-
-      folderOptions[this.res.BUCKETS_SELF_ASSIGNED] = e => {
-        this._currentFolder = null;
-      };
-
-      const folderSelect = this.targetId
-        ? html`
-            <span class="PlanTitle">
-              ${folder.name}
-            </span>
-          `
-        : html`
-            <mgt-arrow-options .value="${currentFolder.name}" .options="${folderOptions}"></mgt-arrow-options>
-          `;
 
       return html`
         <span class="TitleCont">
+          <mgt-icon name="ChevronRight"></mgt-icon>
           ${folderSelect}
         </span>
         ${addButton}
@@ -937,139 +1034,181 @@ export class MgtTasks extends MgtTemplatedComponent {
     return mgtPeople;
   }
 
-  private renderTask(task: ITask) {
-    const { name = 'Task', completed = false, dueDate } = task;
-
-    const isLoading = this._loadingTasks.includes(task.id);
-
-    const taskCheckClasses = {
-      Complete: !isLoading && completed,
-      Loading: isLoading,
-      TaskCheck: true,
-      TaskIcon: true
-    };
-
-    const taskCheckContent = isLoading
-      ? html`
-          \uF16A
-        `
-      : completed
-      ? html`
-          \uE73E
-        `
-      : null;
-
-    const taskCheck = html`
-      <span class=${classMap(taskCheckClasses)}>${taskCheckContent}</span>
-    `;
-
-    const groupTitle = this._currentGroup ? null : this.getPlanTitle(task.topParentId);
-    const folderTitle = this._currentFolder ? null : this.getFolderName(task.immediateParentId);
-
-    const context = { task: { ...task._raw, groupTitle, folderTitle } };
-    const taskTemplate = this.renderTemplate('task', context, task.id);
-    if (taskTemplate) {
-      return taskTemplate;
-    }
-
-    let taskDetails = this.renderTemplate('task-details', context, `task-details-${task.id}`);
-
-    if (!taskDetails) {
-      const group =
-        this.dataSource === TasksSource.todo || this._currentGroup
-          ? null
-          : html`
-              <div class="TaskDetail TaskGroup">
-                ${this.renderPlannerIcon()}
-                <span>${this.getPlanTitle(task.topParentId)}</span>
-              </div>
-            `;
-
-      const folder = this._currentFolder
-        ? null
-        : html`
-            <div class="TaskDetail TaskBucket">
-              ${this.renderBucketIcon()}
-              <span>${this.getFolderName(task.immediateParentId)}</span>
-            </div>
-          `;
-
-      const taskDue = !dueDate
-        ? null
-        : html`
-            <div class="TaskDetail TaskDue">
-              <span>Due ${getShortDateString(dueDate)}</span>
-            </div>
-          `;
-
-      const taskPeople = this.dataSource !== TasksSource.todo ? this.renderAssignedPeople(task) : null;
-
-      taskDetails = html`
-        <div class="TaskTitle">
-          ${name}
-        </div>
-        ${group} ${folder} ${taskPeople} ${taskDue}
+  private renderTask(task: PlannerTask | OutlookTask) {
+    let taskView;
+    if ((task as OutlookTask).body){
+      // render ToDo Task
+      // TODO move template to here
+      taskView = html`
+        <mgt-todo-task .taskSource=${this.todo} .task=${task} .readOnly=${this.readOnly} .folderName=${this.currentFolder.name}></mgt-todo-task>
       `;
+    } else {
+      // render Planner Task
     }
-
-    const taskOptions = this.readOnly
-      ? null
-      : html`
-          <div class="TaskOptions">
-            <mgt-dot-options
-              .options="${{
-                'Delete Task': () => this.removeTask(task)
-              }}"
-            ></mgt-dot-options>
-          </div>
-        `;
 
     return html`
-      <div
-        class=${classMap({
-          Complete: completed,
-          Incomplete: !completed,
-          ReadOnly: this.readOnly,
-          Task: true
-        })}
-      >
-        <div
-          class="TaskContent"
-          @click=${() => {
-            this.handleTaskClick(task);
-          }}
-        >
-          <span
-            class=${classMap({
-              Complete: completed,
-              Incomplete: !completed,
-              TaskCheckContainer: true
-            })}
-            @click="${e => {
-              if (!this.readOnly) {
-                if (!task.completed) {
-                  this.completeTask(task);
-                } else {
-                  this.uncompleteTask(task);
-                }
-
-                e.stopPropagation();
-                e.preventDefault();
-              }
-            }}"
-          >
-            ${taskCheck}
-          </span>
-          <div class="TaskDetailsContainer ${this.mediaQuery} ${this._currentGroup ? 'NoPlan' : ''}">
-            ${taskDetails}
-          </div>
-          ${taskOptions}
-
-          <div class="Divider"></div>
-        </div>
-      </div>
-    `;
+    <div class="TaskRoot">
+      ${taskView}
+    </div>`;
   }
+
+  private renderNewTask2() {
+    if (this.dataSource === TasksSource.todo){
+      // render ToDo Task
+      // TODO move template to here
+      return html`
+        <mgt-todo-new-task @cancel=${() => (this.isNewTaskVisible = false)} @add=${e => this.addTask2(e.detail.task)}></mgt-todo-new-task>
+      `;
+    } else {
+      // render Planner Task
+    }
+  }
+
+  private async addTask2(task: OutlookTask) {
+    if (this.todo) {
+      task.parentFolderId = this.currentFolder.id;
+
+      if (this.todo.addTask(task)) {
+        this._isNewTaskVisible = false;
+      }
+    }
+  }
+
+  // private renderPlannerTask(task: PlannerTask) {
+  //   const name = task.title;
+  //   const completed = task.percentComplete === 100;
+  //   const dueDate = task.dueDateTime && new Date(task.dueDateTime);
+
+  //   const isLoading = this._loadingTasks.includes(task.id);
+
+  //   const taskCheckClasses = {
+  //     Complete: !isLoading && completed,
+  //     Loading: isLoading,
+  //     TaskCheck: true,
+  //     TaskIcon: true
+  //   };
+
+  //   const taskCheckContent = isLoading
+  //     ? html`
+  //         \uF16A
+  //       `
+  //     : completed
+  //     ? html`
+  //         \uE73E
+  //       `
+  //     : null;
+
+  //   const taskCheck = html`
+  //     <span class=${classMap(taskCheckClasses)}>${taskCheckContent}</span>
+  //   `;
+
+  //   const groupTitle = this._currentGroup ? null : this.getPlanTitle(task.topParentId);
+  //   const folderTitle = this._currentFolder ? null : this.getFolderName(task.immediateParentId);
+
+  //   const context = { task: { ...task._raw, groupTitle, folderTitle } };
+  //   const taskTemplate = this.renderTemplate('task', context, task.id);
+  //   if (taskTemplate) {
+  //     return taskTemplate;
+  //   }
+
+  //   let taskDetails = this.renderTemplate('task-details', context, `task-details-${task.id}`);
+
+  //   if (!taskDetails) {
+  //     const group =
+  //       this.dataSource === TasksSource.todo || this._currentGroup
+  //         ? null
+  //         : html`
+  //             <div class="TaskDetail TaskGroup">
+  //               ${this.renderPlannerIcon()}
+  //               <span>${this.getPlanTitle(task.topParentId)}</span>
+  //             </div>
+  //           `;
+
+  //     const folder = this._currentFolder
+  //       ? null
+  //       : html`
+  //           <div class="TaskDetail TaskBucket">
+  //             ${this.renderBucketIcon()}
+  //             <span>${this.getFolderName(task.immediateParentId)}</span>
+  //           </div>
+  //         `;
+
+  //     const taskDue = !dueDate
+  //       ? null
+  //       : html`
+  //           <div class="TaskDetail TaskDue">
+  //             <span>Due ${getShortDateString(dueDate)}</span>
+  //           </div>
+  //         `;
+
+  //     const taskPeople = this.dataSource !== TasksSource.todo ? this.renderAssignedPeople(task) : null;
+
+  //     taskDetails = html`
+  //       <div class="TaskTitle">
+  //         ${name}
+  //       </div>
+  //       ${group} ${folder} ${taskPeople} ${taskDue}
+  //     `;
+  //   }
+
+  //   const taskOptions = this.readOnly
+  //     ? null
+  //     : html`
+  //         <div class="TaskOptions">
+  //           <mgt-dot-options
+  //             .options="${{
+  //               'Delete Task': () => this.removeTask(task)
+  //             }}"
+  //           ></mgt-dot-options>
+  //         </div>
+  //       `;
+
+  //   return html`
+  //     <div
+  //       class=${classMap({
+  //         Complete: completed,
+  //         Incomplete: !completed,
+  //         ReadOnly: this.readOnly,
+  //         Task: true
+  //       })}
+  //     >
+  //       <div
+  //         class="TaskContent"
+  //         @click=${() => {
+  //           this.handleTaskClick(task);
+  //         }}
+  //       >
+  //         <span
+  //           class=${classMap({
+  //             Complete: completed,
+  //             Incomplete: !completed,
+  //             TaskCheckContainer: true
+  //           })}
+  //           @click="${e => {
+  //             if (!this.readOnly) {
+  //               if (!task.completed) {
+  //                 this.completeTask(task);
+  //               } else {
+  //                 this.uncompleteTask(task);
+  //               }
+
+  //               e.stopPropagation();
+  //               e.preventDefault();
+  //             }
+  //           }}"
+  //         >
+  //           ${taskCheck}
+  //         </span>
+  //         <div class="TaskDetailsContainer ${this.mediaQuery} ${this._currentGroup ? 'NoPlan' : ''}">
+  //           ${taskDetails}
+  //         </div>
+  //         ${taskOptions}
+
+  //         <div class="Divider"></div>
+  //       </div>
+  //     </div>
+  //   `;
+  // }
 
   private renderAssignedPeople(task: ITask) {
     let assignedPeopleHTML = null;
@@ -1123,9 +1262,9 @@ export class MgtTasks extends MgtTemplatedComponent {
     `;
   }
 
-  private handleTaskClick(task: ITask) {
+  private handleTaskClick(task: PlannerTask | OutlookTask) {
     if (task && !this.isPeoplePickerVisible) {
-      this.fireCustomEvent('taskClick', { task: task._raw });
+      this.fireCustomEvent('taskClick', { task });
     }
   }
 
@@ -1195,19 +1334,20 @@ export class MgtTasks extends MgtTemplatedComponent {
   }
 
   private getTaskSource(): ITaskSource {
-    const p = Providers.globalProvider;
-    if (!p || p.state !== ProviderState.SignedIn) {
-      return null;
-    }
+    return null;
+    // const p = Providers.globalProvider;
+    // if (!p || p.state !== ProviderState.SignedIn) {
+    //   return null;
+    // }
 
-    const graph = p.graph.forComponent(this);
-    if (this.dataSource === TasksSource.planner) {
-      return new PlannerTaskSource(graph);
-    } else if (this.dataSource === TasksSource.todo) {
-      return new TodoTaskSource(graph);
-    } else {
-      return null;
-    }
+    // const graph = p.graph.forComponent(this);
+    // if (this.dataSource === TasksSource.planner) {
+    //   return new PlannerTaskSource(graph);
+    // } else if (this.dataSource === TasksSource.todo) {
+    //   return new TodoTaskSource(graph);
+    // } else {
+    //   return null;
+    // }
   }
 
   private getPlanTitle(planId: string): string {

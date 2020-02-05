@@ -1,0 +1,38 @@
+/**
+ * -------------------------------------------------------------------------------------------
+ * Copyright (c) Microsoft Corporation.  All Rights Reserved.  Licensed under the MIT License.
+ * See License in the project root for license information.
+ * -------------------------------------------------------------------------------------------
+ */
+
+@import '../../../../node_modules/office-ui-fabric-core/dist/sass/References';
+
+.root {
+  .flyout {
+    display: none;
+    position: fixed;
+    z-index: 2;
+    opacity: 0;
+    transition-property: opacity;
+    transition-duration: 0.1s;
+    box-shadow: $ms-depth-shadow-8;
+  }
+
+  &.visible {
+    .flyout {
+      display: inline-block;
+      animation: fadeIn 0.15s ease-in both;
+    }
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translate3d(0, -5%, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}

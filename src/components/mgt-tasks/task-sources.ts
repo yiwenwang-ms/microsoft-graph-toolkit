@@ -449,7 +449,7 @@ export class PlannerTaskSource extends TaskSourceBase implements ITaskSource {
 }
 
 /**
- * determins outlook task group for data source
+ * Microsoft To-Do Task source
  *
  * @export
  * @class TodoTaskSource

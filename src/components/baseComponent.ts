@@ -40,26 +40,6 @@ export enum ComponentMediaQuery {
  */
 export abstract class MgtBaseComponent extends LitElement {
   /**
-   * Get ShadowRoot toggle, returns value of _useShadowRoot
-   *
-   * @static _useShadowRoot
-   * @memberof MgtBaseComponent
-   */
-  public static get useShadowRoot() {
-    return this._useShadowRoot;
-  }
-
-  /**
-   * Set ShadowRoot toggle value
-   *
-   * @static _useShadowRoot
-   * @memberof MgtBaseComponent
-   */
-  public static set useShadowRoot(value: boolean) {
-    this._useShadowRoot = value;
-  }
-
-  /**
    * Gets the ComponentMediaQuery of the component
    *
    * @readonly
@@ -74,25 +54,6 @@ export abstract class MgtBaseComponent extends LitElement {
     } else {
       return ComponentMediaQuery.desktop;
     }
-  }
-
-  private static _useShadowRoot: boolean = true;
-
-  constructor() {
-    super();
-    if (this.isShadowRootDisabled()) {
-      (this as any)._needsShimAdoptedStyleSheets = true;
-    }
-  }
-
-  /**
-   * Receive ShadowRoot Disabled value
-   *
-   * @returns boolean _useShadowRoot value
-   * @memberof MgtBaseComponent
-   */
-  public isShadowRootDisabled() {
-    return !MgtBaseComponent._useShadowRoot || !(this.constructor as typeof MgtBaseComponent)._useShadowRoot;
   }
 
   /**
@@ -111,17 +72,6 @@ export abstract class MgtBaseComponent extends LitElement {
       detail
     });
     return this.dispatchEvent(event);
-  }
-
-  /**
-   * method to create ShadowRoot if disabled flag isn't present
-   *
-   * @protected
-   * @returns boolean
-   * @memberof MgtBaseComponent
-   */
-  protected createRenderRoot() {
-    return this.isShadowRootDisabled() ? this : super.createRenderRoot();
   }
 
   /**

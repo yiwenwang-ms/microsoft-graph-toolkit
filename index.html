@@ -9,12 +9,19 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css" rel="stylesheet" />
     <!-- <script src="./node_modules/@webcomponents/webcomponentsjs/webcomponents-loader.js"></script> -->
 
-    <script src="https://unpkg.com/@microsoft/teams-js/dist/MicrosoftTeams.min.js" crossorigin="anonymous"></script>
+    <!-- <script src="https://unpkg.com/@microsoft/teams-js/dist/MicrosoftTeams.min.js" crossorigin="anonymous"></script> -->
 
     <!-- <script src="./dist/bundle/mgt-loader.js"></script> -->
 
     <script type="module" src="dist/es6/index.js"></script>
     <script type="module" src="./dist/es6/mock/mgt-mock-provider.js"></script>
+
+    <style>
+      mgt-tasks {
+        height: 500px;
+        width: 500px;
+      }
+    </style>
   </head>
 
   <body>
@@ -32,10 +39,10 @@
     <!-- <mgt-mock-provider></mgt-mock-provider> -->
 
     <mgt-login></mgt-login>
-    <mgt-person person-query="me" show-name show-email person-card="hover"></mgt-person>
-    <mgt-people-picker></mgt-people-picker>
+    <!-- <mgt-person person-query="me" show-name show-email person-card="hover"></mgt-person>
+    <mgt-people-picker></mgt-people-picker> -->
     <mgt-tasks data-source="todo"></mgt-tasks>
-    <mgt-agenda group-by-day></mgt-agenda>
-    <mgt-people></mgt-people>
+    <!-- <mgt-agenda group-by-day></mgt-agenda>
+    <mgt-people></mgt-people> -->
   </body>
 </html>

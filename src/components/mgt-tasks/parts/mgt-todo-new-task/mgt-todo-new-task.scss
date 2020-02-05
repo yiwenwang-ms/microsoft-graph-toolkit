@@ -1,0 +1,147 @@
+/**
+ * -------------------------------------------------------------------------------------------
+ * Copyright (c) Microsoft Corporation.  All Rights Reserved.  Licensed under the MIT License.
+ * See License in the project root for license information.
+ * -------------------------------------------------------------------------------------------
+ */
+
+@import '../../../../styles/shared-styles.scss';
+@import '../../../../../node_modules/office-ui-fabric-core/dist/sass/References';
+@import '../mgt-todo-task/mgt-todo-task.scss';
+
+.NewTask {
+  display: flex;
+  flex-direction: row;
+  margin: 0px;
+  padding: 0 0 0 8px;
+
+  > mgt-button,
+  > div {
+    margin: 8px 8px 8px 0;
+  }
+
+  .TaskContent {
+    flex: 1 1 auto;
+    align-content: center;
+    vertical-align: middle;
+    margin: 0px;
+
+    .TaskDetailsContainer {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      margin: 0;
+
+      .TaskTitle {
+        display: flex;
+        margin: 19px 0;
+
+        input {
+          flex: 1;
+          font-family: var(--default-font-family, 'Segoe UI');
+          margin: var(--task-new-input-margin, 0 0 0);
+          padding: var(--task-new-input-padding, 0);
+          font-size: var(--task-new-input-font-size, 14px);
+          font-weight: 600;
+          border: var(--task-new-border, none);
+          outline: none;
+          border-radius: 0;
+        }
+      }
+
+      .TaskDetails {
+        display: flex;
+        justify-content: stretch;
+        align-items: center;
+        flex-wrap: wrap;
+        margin: 0 0 12px 0;
+
+        > div {
+          margin: 0 16px 0 0;
+        }
+
+        // .NewTaskGroup {
+        //   margin: 8px 16px;
+        // }
+
+        // .NewTaskBucket {
+        //   margin: 8px 16px;
+        // }
+
+        // .NewTaskDue {
+        //   margin: 0 16px;
+        // }
+
+        // .NewTaskAssignee {
+        //   margin: 8px 16px;
+        //   min-width: 80px;
+        // }
+
+        // .TaskPeople label {
+        //   display: flex;
+        //   align-content: center;
+        //   align-items: center;
+        // }
+
+        select,
+        input {
+          font-family: var(--default-font-family, 'Segoe UI');
+          font-size: 12px;
+          font-weight: 600;
+          border: var(--task-new-select-border, none);
+          border-bottom: 1px solid $ms-color-gray40;
+          outline: none;
+          border-radius: 0;
+
+          &:hover {
+            border-bottom: 1px solid $ms-color-communicationShade10;
+          }
+
+          &:active {
+            border-bottom: 1px solid $ms-color-communicationShade20;
+          }
+
+          &:focus {
+            border-bottom: 1px solid $ms-color-communicationPrimary;
+          }
+        }
+      }
+    }
+  }
+
+  mgt-button {
+    width: 40px;
+  }
+
+  // .TaskAddButtonContainer {
+  //   flex: 0 0 auto;
+  //   display: flex;
+
+  //   .TaskIcon {
+  //     height: 100%;
+  //     max-width: 50px;
+  //     min-width: 50px;
+  //     flex: 1 1 auto;
+  //     justify-content: center;
+  //     align-items: center;
+  //     display: flex;
+  //     cursor: pointer;
+  //     color: var(--task-new-cancel-button-color, $ms-color-gray210);
+  //     margin: 0px 0px 0px 8px;
+  //   }
+
+  //   .TaskAdd {
+  //     color: white;
+  //     background: var(--task-new-add-button-background, $ms-color-communicationPrimary);
+  //   }
+
+  //   .TaskCancel {
+  //     margin: 0px;
+  //   }
+
+  //   &.Disabled .TaskAdd {
+  //     background: var(--task-new-add-button-disabled-background, #eaeaea);
+  //     cursor: default;
+  //   }
+  // }
+}
