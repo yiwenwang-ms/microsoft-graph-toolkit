@@ -194,6 +194,15 @@ export class MgtTasks extends MgtTemplatedComponent {
   public hideHeader: boolean = false;
 
   /**
+   * sets whether the options are rendered
+   *
+   * @type {boolean}
+   * @memberof MgtTasks
+   */
+  @property({ attribute: 'hide-options', type: Boolean })
+  public hideOptions: boolean;
+
+  /**
    * allows developer to define specific group id
    */
   @property({ attribute: 'group-id', type: String })
@@ -245,7 +254,7 @@ export class MgtTasks extends MgtTemplatedComponent {
   private handleWindowClick: (event: MouseEvent) => void;
   private previousMediaQuery: ComponentMediaQuery;
 
-  private loadingMore : boolean;
+  private loadingMore: boolean;
 
   constructor() {
     super();
@@ -379,13 +388,13 @@ export class MgtTasks extends MgtTemplatedComponent {
         ${newTask} 
         <div class="Tasks" @scroll=${this.handleScroll}>
           ${loadingTask}
-          ${this.tasks ? repeat(this.tasks, task => task.id, task => this.renderTask(task)): null}
+          ${this.tasks ? repeat(this.tasks, task => task.id, task => this.renderTask(task)) : null}
         </div>
       </div>
     `;
   }
 
-  private handleScroll(e: Event){
+  private handleScroll(e: Event) {
     const el = e.target as HTMLElement;
     if (el.scrollTop + el.clientHeight >= el.scrollHeight - 10) {
       this.loadMoreTasks();
@@ -438,24 +447,24 @@ export class MgtTasks extends MgtTemplatedComponent {
         console.log('updated');
         this.loadFolder(this.currentFolder as OutlookTaskFolder);
       })
-  
+
       const folders = await this.todo.getFolders();
-  
+
       const currentFolder = folders.find(f => f.isDefaultFolder) ?? folders[0] ?? null;
-  
+
       if (!currentFolder) {
         debugger;
       }
-  
-      
+
+
       this.folders = folders;
       this.loadFolder(currentFolder);
-  
-          this._inTaskLoad = true;
+
+      this._inTaskLoad = true;
       this._hasDoneInitialLoad = true;
     }
 
-    
+
     return;
 
     let meTask;
@@ -637,7 +646,7 @@ export class MgtTasks extends MgtTemplatedComponent {
   }
 
   private async removeTask(task: PlannerTask | OutlookTask) {
-// TODO
+    // TODO
 
     // const ts = this.getTaskSource();
     // if (!ts) {
@@ -822,7 +831,7 @@ export class MgtTasks extends MgtTemplatedComponent {
       // };
 
       let folderSelect: TemplateResult;
-      
+
       if (this.folders) {
         const folderOptions = {};
 
@@ -831,7 +840,7 @@ export class MgtTasks extends MgtTemplatedComponent {
             this.loadFolder(f as OutlookTaskFolder);
           };
         }
-  
+
         folderSelect = this.targetId
           ? html`
               <span class="PlanTitle">
@@ -862,8 +871,8 @@ export class MgtTasks extends MgtTemplatedComponent {
         aria-label="new-taskName-input"
         role="input"
         @input="${(e: Event) => {
-          this._newTaskName = (e.target as HTMLInputElement).value;
-        }}"
+        this._newTaskName = (e.target as HTMLInputElement).value;
+      }}"
       />
     `;
     const groups = this._groups;
@@ -874,26 +883,26 @@ export class MgtTasks extends MgtTemplatedComponent {
       this.dataSource === TasksSource.todo
         ? null
         : this._currentGroup
-        ? html`
+          ? html`
             <span class="NewTaskGroup">
               ${this.renderPlannerIcon()}
               <span>${this.getPlanTitle(this._currentGroup)}</span>
             </span>
           `
-        : html`
+          : html`
             <span class="NewTaskGroup">
               ${this.renderPlannerIcon()}
               <select
                 .value="${this._newTaskGroupId}"
                 @change="${(e: Event) => {
-                  this._newTaskGroupId = (e.target as HTMLInputElement).value;
-                }}"
+              this._newTaskGroupId = (e.target as HTMLInputElement).value;
+            }}"
               >
                 ${this._groups.map(
-                  plan => html`
+              plan => html`
                     <option value="${plan.id}">${plan.title}</option>
                   `
-                )}
+            )}
               </select>
             </span>
           `;
@@ -919,14 +928,14 @@ export class MgtTasks extends MgtTemplatedComponent {
             <select
               .value="${this._newTaskFolderId}"
               @change="${(e: Event) => {
-                this._newTaskFolderId = (e.target as HTMLInputElement).value;
-              }}"
+          this._newTaskFolderId = (e.target as HTMLInputElement).value;
+        }}"
             >
               ${folders.map(
-                folder => html`
+          folder => html`
                   <option value="${folder.id}">${folder.name}</option>
                 `
-              )}
+        )}
             </select>
           </span>
         `;
@@ -940,13 +949,13 @@ export class MgtTasks extends MgtTemplatedComponent {
           role="input"
           .value="${this.dateToInputValue(this._newTaskDueDate)}"
           @change="${(e: Event) => {
-            const value = (e.target as HTMLInputElement).value;
-            if (value) {
-              this._newTaskDueDate = new Date(value + 'T17:00');
-            } else {
-              this._newTaskDueDate = null;
-            }
-          }}"
+        const value = (e.target as HTMLInputElement).value;
+        if (value) {
+          this._newTaskDueDate = new Date(value + 'T17:00');
+        } else {
+          this._newTaskDueDate = null;
+        }
+      }}"
         />
       </span>
     `;
@@ -1036,7 +1045,7 @@ export class MgtTasks extends MgtTemplatedComponent {
 
   private renderTask(task: PlannerTask | OutlookTask) {
     let taskView;
-    if ((task as OutlookTask).body){
+    if ((task as OutlookTask).body) {
       // render ToDo Task
       // TODO move template to here
       taskView = html`
@@ -1053,7 +1062,7 @@ export class MgtTasks extends MgtTemplatedComponent {
   }
 
   private renderNewTask2() {
-    if (this.dataSource === TasksSource.todo){
+    if (this.dataSource === TasksSource.todo) {
       // render ToDo Task
       // TODO move template to here
       return html`
@@ -1221,8 +1230,8 @@ export class MgtTasks extends MgtTemplatedComponent {
 
     const assignedPeople = task
       ? Object.keys(task.assignments).map(key => {
-          return key;
-        })
+        return key;
+      })
       : [];
 
     const noPeopleTemplate = html`
@@ -1246,9 +1255,9 @@ export class MgtTasks extends MgtTemplatedComponent {
       <mgt-flyout
         class=${classMap(taskAssigneeClasses)}
         @click=${(e: MouseEvent) => {
-          this.showPeoplePicker(task);
-          e.stopPropagation();
-        }}
+        this.showPeoplePicker(task);
+        e.stopPropagation();
+      }}
         .isOpen=${this.isPeoplePickerVisible && task === this._currentTask}
       >
         ${assignedPeopleHTML}
