@@ -137,7 +137,7 @@ export class MgtTasks extends MgtTemplatedComponent {
    * @type {boolean}
    */
   @property({ attribute: 'read-only', type: Boolean })
-  public readOnly: boolean = false;
+  public readOnly: boolean;
 
   /**
    * determines which task source is loaded, either planner or todo
@@ -157,14 +157,14 @@ export class MgtTasks extends MgtTemplatedComponent {
    * @type {string}
    */
   @property({ attribute: 'target-id', type: String })
-  public targetId: string = null;
+  public targetId: string;
 
   /**
    * if set, the component will only show tasks from this bucket or folder
    * @type {string}
    */
   @property({ attribute: 'target-bucket-id', type: String })
-  public targetBucketId: string = null;
+  public targetBucketId: string;
 
   /**
    * if set, the component will first show tasks from this plan or group
@@ -173,7 +173,7 @@ export class MgtTasks extends MgtTemplatedComponent {
    * @memberof MgtTasks
    */
   @property({ attribute: 'initial-id', type: String })
-  public initialId: string = null;
+  public initialId: string;
 
   /**
    * if set, the component will first show tasks from this bucket or folder
@@ -182,7 +182,7 @@ export class MgtTasks extends MgtTemplatedComponent {
    * @memberof MgtTasks
    */
   @property({ attribute: 'initial-bucket-id', type: String })
-  public initialBucketId: string = null;
+  public initialBucketId: string;
 
   /**
    * sets whether the header is rendered
@@ -191,7 +191,7 @@ export class MgtTasks extends MgtTemplatedComponent {
    * @memberof MgtTasks
    */
   @property({ attribute: 'hide-header', type: Boolean })
-  public hideHeader: boolean = false;
+  public hideHeader: boolean;
 
   /**
    * sets whether the options are rendered
@@ -206,7 +206,7 @@ export class MgtTasks extends MgtTemplatedComponent {
    * allows developer to define specific group id
    */
   @property({ attribute: 'group-id', type: String })
-  public groupId: string = null;
+  public groupId: string;
 
   /**
    * Optional filter function when rendering tasks
@@ -247,7 +247,7 @@ export class MgtTasks extends MgtTemplatedComponent {
   @property() private _currentFolder: string;
   @property() private _currentTask: ITask;
 
-  @property() private isPeoplePickerVisible: boolean = false;
+  @property() private isPeoplePickerVisible: boolean;
 
   private _me: User = null;
   private providerUpdateCallback: () => void | any;
@@ -258,6 +258,16 @@ export class MgtTasks extends MgtTemplatedComponent {
 
   constructor() {
     super();
+    this._newTaskName = '';
+    this._newTaskDueDate = null;
+    this._newTaskGroupId = '';
+    this._newTaskFolderId = '';
+    this._groups = [];
+    this._folders = [];
+    this._tasks = [];
+    this._hiddenTasks = [];
+    this._loadingTasks = [];
+
     this.previousMediaQuery = this.mediaQuery;
     this.onResize = this.onResize.bind(this);
     this.providerUpdateCallback = () => this.loadTasks();
