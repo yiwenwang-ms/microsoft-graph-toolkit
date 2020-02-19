@@ -16,16 +16,22 @@
     <script type="module" src="dist/es6/index.js"></script>
     <script type="module" src="./dist/es6/mock/mgt-mock-provider.js"></script>
 
+    <script type="module" src="./dist/es6/components/common/mgt-shimmer/mgt-shimmer.js"></script>
+
     <style>
       mgt-tasks {
         height: 500px;
         width: 500px;
       }
+
+      mgt-shimmer {
+        margin: 20px;
+      }
     </style>
   </head>
 
   <body>
-    <mgt-teams-provider
+    <!-- <mgt-teams-provider
       client-id="a974dfa0-9f57-49b9-95db-90f04ce2111a"
       auth-popup-url="auth.html"
     ></mgt-teams-provider>
@@ -34,15 +40,41 @@
       client-id="a974dfa0-9f57-49b9-95db-90f04ce2111a"
       scopes="user.read,people.read,user.readbasic.all,contacts.read,calendars.read"
       depends-on="mgt-teams-provider"
-    ></mgt-msal-provider>
+    ></mgt-msal-provider> -->
 
     <!-- <mgt-mock-provider></mgt-mock-provider> -->
 
-    <mgt-login></mgt-login>
+    <!-- <mgt-login></mgt-login> -->
     <!-- <mgt-person person-query="me" show-name show-email person-card="hover"></mgt-person>
     <mgt-people-picker></mgt-people-picker> -->
-    <mgt-tasks data-source="todo"></mgt-tasks>
+    <!-- <mgt-tasks data-source="todo"></mgt-tasks> -->
     <!-- <mgt-agenda group-by-day></mgt-agenda>
     <mgt-people></mgt-people> -->
+
+    <!-- { type: ShimmerElementType.circle },
+          { type: ShimmerElementType.gap, width: '2%' },
+          { type: ShimmerElementType.circle, height: 15, verticalAlign: 'top' },
+          { type: ShimmerElementType.gap, width: '2%' },
+          { type: ShimmerElementType.line, verticalAlign: 'bottom', width: '20%' },
+          { type: ShimmerElementType.gap, width: '2%' },
+          { type: ShimmerElementType.line, height: 5, verticalAlign: 'top', width: '20%' },
+          { type: ShimmerElementType.gap, width: '2%' },
+          { type: ShimmerElementType.line, height: 16, width: '15%' },
+          { type: ShimmerElementType.gap, width: '2%' },
+          { type: ShimmerElementType.line, height: 10, verticalAlign: 'bottom' } -->
+
+    <mgt-shimmer>
+      <mgt-shimmer-circle></mgt-shimmer-circle>
+      <mgt-shimmer-gap width="2%"></mgt-shimmer-gap>
+      <mgt-shimmer-circle height="15" vertical-align="top"></mgt-shimmer-circle>
+      <mgt-shimmer-gap width="2%"></mgt-shimmer-gap>
+      <mgt-shimmer-line vertical-align="bottom" width="20%"></mgt-shimmer-line>
+      <mgt-shimmer-gap></mgt-shimmer-gap>
+      <mgt-shimmer-line vertical-align="top" width="20%" height="5"></mgt-shimmer-line>
+      <mgt-shimmer-gap></mgt-shimmer-gap>
+      <mgt-shimmer-line width="15%" height="16"></mgt-shimmer-line>
+      <mgt-shimmer-gap></mgt-shimmer-gap>
+      <mgt-shimmer-line vertical-align="bottom" height="10"></mgt-shimmer-line>
+    </mgt-shimmer>
   </body>
 </html>
