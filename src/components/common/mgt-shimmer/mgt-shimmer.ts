@@ -68,7 +68,7 @@ export class MgtShimmer extends LitElement {
             );
             break;
           case 'MGT-SHIMMER-GAP':
-            shimmerElements.push(this.renderGap(child.width));
+            shimmerElements.push(this.renderGap(child.width, rowHeight));
             break;
           case 'MGT-SHIMMER-CIRCLE':
             shimmerElements.push(
@@ -99,8 +99,8 @@ export class MgtShimmer extends LitElement {
     `;
   }
 
-  protected renderLine(options: { style: any; width?: number | string; height?: number }) {
-    let { style, width, height } = options;
+  protected renderLine(options?: { style: any; width?: number | string; height?: number }) {
+    let { style, width, height } = options || {};
 
     style = style || {};
 
@@ -120,10 +120,11 @@ export class MgtShimmer extends LitElement {
     `;
   }
 
-  protected renderGap(width?: string | number) {
-    const style = {
-      width: typeof width === 'number' ? width + 'px' : width
-    };
+  protected renderGap(width?: string | number, height?: number) {
+    const style: any = {};
+
+    style.width = width ? (typeof width === 'number' ? width + 'px' : width) : null;
+    style.height = height ? height + 'px' : null;
 
     return html`
       <div class="gap" style=${styleMap(style)}></div>
@@ -226,5 +227,5 @@ export class MgtShimmerGap extends MgtShimmerElement {
 
 @customElement('mgt-shimmer-circle')
 export class MgtShimmerCircle extends MgtShimmerElement {
-  public static readonly defaultHeight = 24;
+  public static readonly defaultHeight = 50;
 }
