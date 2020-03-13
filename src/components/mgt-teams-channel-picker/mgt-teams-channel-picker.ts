@@ -7,7 +7,7 @@
 
 import { forStatement, templateElement } from '@babel/types';
 import * as MicrosoftGraph from '@microsoft/microsoft-graph-types';
-import { customElement, html, property, TemplateResult } from 'lit-element';
+import { customElement, html, property, PropertyValues, TemplateResult } from 'lit-element';
 import { isTemplatePartActive } from 'lit-html';
 import { repeat } from 'lit-html/directives/repeat';
 import { Providers } from '../../Providers';
@@ -820,7 +820,6 @@ export class MgtTeamsChannelPicker extends MgtTemplatedComponent {
 
   private addChannel(event, pickedChannel: any) {
     // reset blue highlight
-
     for (const team of this.teams) {
       for (const channel of team.channels) {
         const selection = channel.id.replace(/[^a-zA-Z ]/g, '');
@@ -829,6 +828,7 @@ export class MgtTeamsChannelPicker extends MgtTemplatedComponent {
       }
     }
 
+    let updated = false;
     if (event.key === 'Tab') {
       for (const team of this.teams) {
         if (team.id === pickedChannel) {
@@ -848,6 +848,7 @@ export class MgtTeamsChannelPicker extends MgtTemplatedComponent {
           for (const channel of team.channels) {
             if (channel.id.replace(/[^a-zA-Z ]/g, '') === shownIds[this.channelCounter]) {
               this.selectedTeams = [[team], [channel]];
+              updated = true;
             }
           }
 
@@ -864,6 +865,7 @@ export class MgtTeamsChannelPicker extends MgtTemplatedComponent {
         for (const team of this.teams) {
           if (team.id === teamId) {
             this.selectedTeams = [[team], [pickedChannel]];
+            updated = true;
             const selection = pickedChannel.id.replace(/[^a-zA-Z ]/g, '');
             const channelDiv = this.renderRoot.querySelector(`.channel-${selection}`);
             channelDiv.parentElement.classList.add('blue-highlight');
@@ -872,10 +874,15 @@ export class MgtTeamsChannelPicker extends MgtTemplatedComponent {
         }
       }
     }
+
     this._userInput = '';
     this.arrowSelectionCount = -1;
     this.channelCounter = 0;
     this.requestUpdate();
+
+    if (updated) {
+      this.fireCustomEvent('selectionChanged', this.selectedTeams);
+    }
   }
 
   private _clickTeam(id: string) {
