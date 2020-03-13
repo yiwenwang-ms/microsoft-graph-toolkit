@@ -25,17 +25,18 @@
 
     <mgt-msal-provider
       client-id="a974dfa0-9f57-49b9-95db-90f04ce2111a"
-      scopes="user.read,people.read,user.readbasic.all,contacts.read,calendars.read"
+      scopes="user.read,people.read,user.readbasic.all,contacts.read,calendars.read,User.Read.All"
       depends-on="mgt-teams-provider"
     ></mgt-msal-provider>
 
     <!-- <mgt-mock-provider></mgt-mock-provider> -->
 
     <mgt-login></mgt-login>
-    <mgt-person person-query="me" show-name show-email person-card="hover"></mgt-person>
+    <!--<mgt-person person-query="me" show-name show-email person-card="hover"></mgt-person>
     <mgt-people-picker></mgt-people-picker>
     <mgt-tasks data-source="todo"></mgt-tasks>
     <mgt-agenda group-by-day></mgt-agenda>
-    <mgt-people></mgt-people>
+    <mgt-people></mgt-people>-->
+    <mgt-teams-channel-picker></mgt-teams-channel-picker>
   </body>
 </html>
