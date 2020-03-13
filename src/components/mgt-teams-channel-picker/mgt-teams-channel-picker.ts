@@ -822,8 +822,8 @@ export class MgtTeamsChannelPicker extends MgtTemplatedComponent {
     // reset blue highlight
 
     for (const team of this.teams) {
-      for (let i = 0; i < team.channels.length; i++) {
-        const selection = team.channels[i].id.replace(/[^a-zA-Z ]/g, '');
+      for (const channel of team.channels) {
+        const selection = channel.id.replace(/[^a-zA-Z ]/g, '');
         const channelDiv = this.renderRoot.querySelector(`.channel-${selection}`);
         channelDiv.parentElement.classList.remove('blue-highlight');
       }
@@ -838,6 +838,7 @@ export class MgtTeamsChannelPicker extends MgtTemplatedComponent {
           const shownIds = [];
 
           // check if channels are filtered
+          // tslint:disable-next-line: prefer-for-of
           for (let i = 0; i < channelDiv.parentElement.parentElement.children.length; i++) {
             if (channelDiv.parentElement.parentElement.children[i].children[0].classList.contains('showing')) {
               shownIds.push(channelDiv.parentElement.parentElement.children[i].children[0].classList[1].slice(8));
