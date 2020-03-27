@@ -3,7 +3,7 @@
 <img align="left" height="150" src="https://github.com/microsoftgraph/microsoft-graph-toolkit/raw/master/assets/graff.png" title="Graff the Giraffe">
 
 [![NPM](https://img.shields.io/npm/v/@microsoft/mgt.svg)](https://www.npmjs.com/package/@microsoft/mgt) [![Licence](https://img.shields.io/github/license/microsoftgraph/microsoft-graph-toolkit.svg)](https://github.com/microsoftgraph/microsoft-graph-toolkit) [![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg)](https://github.com/microsoftgraph/msgraph-sdk-javascript) [![stackoverflow](https://img.shields.io/stackexchange/stackoverflow/t/microsoft-graph-toolkit.svg)](https://stackoverflow.com/questions/tagged/microsoft-graph-toolkit)
-[![Build Status](https://dev.azure.com/microsoft-graph-toolkit/microsoft-graph-toolkit/_apis/build/status/microsoftgraph.microsoft-graph-toolkit?branchName=master)](https://dev.azure.com/microsoft-graph-toolkit/microsoft-graph-toolkit/_build/latest?definitionId=1&branchName=master) [![Published on webcomponents.org](https://img.shields.io/badge/webcomponents.org-published-blue.svg)](https://www.webcomponents.org/element/@microsoft/mgt)
+[![Build Status](https://dev.azure.com/microsoft-graph-toolkit/microsoft-graph-toolkit/_apis/build/status/microsoftgraph.microsoft-graph-toolkit?branchName=master)](https://dev.azure.com/microsoft-graph-toolkit/microsoft-graph-toolkit/_build/latest?definitionId=1&branchName=master) [![Published on webcomponents.org](https://img.shields.io/badge/webcomponents.org-published-blue.svg)](https://www.webcomponents.org/element/@microsoft/mgt) [![Storybook](https://raw.githubusercontent.com/storybooks/brand/master/badge/badge-storybook.svg?sanitize=true)](https://mgt.dev)
 
 The Microsoft Graph Toolkit is a collection of web components powered by the Microsoft Graph.
 
@@ -24,15 +24,19 @@ The toolkit currently includes the following components:
 * [mgt-people-picker](https://docs.microsoft.com/graph/toolkit/components/people-picker)
 * [mgt-agenda](https://docs.microsoft.com/graph/toolkit/components/agenda)
 * [mgt-tasks](https://docs.microsoft.com/graph/toolkit/components/tasks)
+* [mgt-get](https://docs.microsoft.com/graph/toolkit/components/get)
 
 And the following providers:
 
 * [Msal Provider](https://docs.microsoft.com/graph/toolkit/providers/msal)
 * [SharePoint Provider](https://docs.microsoft.com/graph/toolkit/providers/sharepoint)
 * [Teams Provider](https://docs.microsoft.com/graph/toolkit/providers/teams)
+* [Proxy Provider](https://docs.microsoft.com/graph/toolkit/providers/proxy)
 * [Simple Provider](https://docs.microsoft.com/graph/toolkit/providers/custom)
 
 [View the full documentation](https://docs.microsoft.com/graph/toolkit/overview)
+
+You can now explore components and samples with the [playground](https://mgt.dev) powered by storybook.
 
 ## Getting Started
 
@@ -117,7 +121,7 @@ Please use [GitHub Issues](https://github.com/microsoftgraph/microsoft-graph-too
 
 ## License
 
-Copyright (c) Microsoft and Contributors. All right reserved. Licensed under the MIT License
+All files in this GitHub repository are subject to the [MIT license](https://github.com/OfficeDev/office-ui-fabric-core/blob/master/LICENSE). This project also references fonts and icons from a CDN, which are subject to a separate [asset license](https://static2.sharepointonline.com/files/fabric/assets/license.txt).
 
 ## Code of Conduct
 

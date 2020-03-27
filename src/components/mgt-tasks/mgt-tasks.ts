@@ -19,11 +19,13 @@ import { PersonCardInteraction } from './../PersonCardInteraction';
 import { styles } from './mgt-tasks-css';
 import { ITask, ITaskFolder, ITaskGroup, ITaskSource, PlannerTaskSource, TodoTaskSource } from './task-sources';
 
+import { getMe } from '../../graph/graph.user';
+import { ComponentMediaQuery } from '../baseComponent';
 import { MgtPeople } from '../mgt-people/mgt-people';
 import '../mgt-person/mgt-person';
 import '../sub-components/mgt-arrow-options/mgt-arrow-options';
 import '../sub-components/mgt-dot-options/mgt-dot-options';
-import '../sub-components/mgt-flyout/mgt-flyout';
+import { MgtFlyout } from '../sub-components/mgt-flyout/mgt-flyout';
 
 /**
  * Defines how a person card is shown when a user interacts with
@@ -31,6 +33,53 @@ import '../sub-components/mgt-flyout/mgt-flyout';
  *
  * @export
  * @enum {number}
+ *
+ * @cssprop --tasks-header-padding - {String} Tasks header padding
+ * @cssprop --tasks-header-margin - {String} Tasks header margin
+ * @cssprop --tasks-title-padding - {String} Tasks title padding
+ * @cssprop --tasks-plan-title-font-size - {Length} Tasks plan title font size
+ * @cssprop --tasks-plan-title-padding - {String} Tasks plan title padding
+ * @cssprop --tasks-new-button-width - {String} Tasks new button width
+ * @cssprop --tasks-new-button-height - {String} Tasks new button height
+ * @cssprop --tasks-new-button-color - {Color} Tasks new button color
+ * @cssprop --tasks-new-button-background - {String} Tasks new button background
+ * @cssprop --tasks-new-button-border - {String} Tasks new button border
+ * @cssprop --tasks-new-button-hover-background - {Color} Tasks new button hover background
+ * @cssprop --tasks-new-button-active-background - {Color} Tasks new button active background
+ * @cssprop --tasks-new-task-name-margin - {String} Tasks new task name margin
+ * @cssprop --task-margin - {String} Task margin
+ * @cssprop --task-box-shadow - {String} Task box shadow
+ * @cssprop --task-background - {Color} Task background
+ * @cssprop --task-border - {String} Task border
+ * @cssprop --task-header-color - {Color} Task header color
+ * @cssprop --task-header-margin - {String} Task header margin
+ * @cssprop --task-detail-icon-margin -{String}  Task detail icon margin
+ * @cssprop --task-new-margin - {String} Task new margin
+ * @cssprop --task-new-border - {String} Task new border
+ * @cssprop --task-new-line-margin - {String} Task new line margin
+ * @cssprop --tasks-new-line-border - {String} Tasks new line border
+ * @cssprop --task-new-input-margin - {String} Task new input margin
+ * @cssprop --task-new-input-padding - {String} Task new input padding
+ * @cssprop --task-new-input-font-size - {Length} Task new input font size
+ * @cssprop --task-new-input-active-border - {String} Task new input active border
+ * @cssprop --task-new-select-border - {String} Task new select border
+ * @cssprop --task-new-add-button-background - {Color} Task new add button background
+ * @cssprop --task-new-add-button-disabled-background - {Color} Task new add button disabled background
+ * @cssprop --task-new-cancel-button-color - {Color} Task new cancel button color
+ * @cssprop --task-complete-background - {Color} Task complete background
+ * @cssprop --task-complete-border - {String} Task complete border
+ * @cssprop --task-complete-header-color - {Color} Task complete header color
+ * @cssprop --task-complete-detail-color - {Color} Task complete detail color
+ * @cssprop --task-complete-detail-icon-color - {Color} Task complete detail icon color
+ * @cssprop --tasks-background-color - {Color} Task background color
+ * @cssprop --task-icon-alignment - {String} Task icon alignment
+ * @cssprop --task-icon-background - {Color} Task icon color
+ * @cssprop --task-icon-background-completed - {Color} Task icon background color when completed
+ * @cssprop --task-icon-border - {String} Task icon border styles
+ * @cssprop --task-icon-border-completed - {String} Task icon border style when task is completed
+ * @cssprop --task-icon-border-radius - {String} Task icon border radius
+ * @cssprop --task-icon-color - {Color} Task icon color
+ * @cssprop --task-icon-color-completed - {Color} Task icon color when completed
  */
 export enum TasksSource {
   /**
@@ -131,7 +180,7 @@ export class MgtTasks extends MgtTemplatedComponent {
    * @type {boolean}
    */
   @property({ attribute: 'read-only', type: Boolean })
-  public readOnly: boolean = false;
+  public readOnly: boolean;
 
   /**
    * determines which task source is loaded, either planner or todo
@@ -151,14 +200,14 @@ export class MgtTasks extends MgtTemplatedComponent {
    * @type {string}
    */
   @property({ attribute: 'target-id', type: String })
-  public targetId: string = null;
+  public targetId: string;
 
   /**
    * if set, the component will only show tasks from this bucket or folder
    * @type {string}
    */
   @property({ attribute: 'target-bucket-id', type: String })
-  public targetBucketId: string = null;
+  public targetBucketId: string;
 
   /**
    * if set, the component will first show tasks from this plan or group
@@ -167,7 +216,7 @@ export class MgtTasks extends MgtTemplatedComponent {
    * @memberof MgtTasks
    */
   @property({ attribute: 'initial-id', type: String })
-  public initialId: string = null;
+  public initialId: string;
 
   /**
    * if set, the component will first show tasks from this bucket or folder
@@ -176,7 +225,7 @@ export class MgtTasks extends MgtTemplatedComponent {
    * @memberof MgtTasks
    */
   @property({ attribute: 'initial-bucket-id', type: String })
-  public initialBucketId: string = null;
+  public initialBucketId: string;
 
   /**
    * sets whether the header is rendered
@@ -185,13 +234,22 @@ export class MgtTasks extends MgtTemplatedComponent {
    * @memberof MgtTasks
    */
   @property({ attribute: 'hide-header', type: Boolean })
-  public hideHeader: boolean = false;
+  public hideHeader: boolean;
+
+  /**
+   * sets whether the options are rendered
+   *
+   * @type {boolean}
+   * @memberof MgtTasks
+   */
+  @property({ attribute: 'hide-options', type: Boolean })
+  public hideOptions: boolean;
 
   /**
    * allows developer to define specific group id
    */
   @property({ attribute: 'group-id', type: String })
-  public groupId: string = null;
+  public groupId: string;
 
   /**
    * Optional filter function when rendering tasks
@@ -200,35 +258,41 @@ export class MgtTasks extends MgtTemplatedComponent {
    */
   public taskFilter: (task: PlannerTask | OutlookTask) => boolean;
 
-  @property() private _isNewTaskVisible: boolean = false;
-  @property() private _newTaskBeingAdded: boolean = false;
-  @property() private _newTaskName: string = '';
-  @property() private _newTaskDueDate: Date = null;
-  @property() private _newTaskGroupId: string = '';
-  @property() private _newTaskFolderId: string = '';
-  @property() private _groups: ITaskGroup[] = [];
-  @property() private _folders: ITaskFolder[] = [];
-  @property() private _tasks: ITask[] = [];
-  @property() private _hiddenTasks: string[] = [];
-  @property() private _loadingTasks: string[] = [];
-  @property() private _inTaskLoad: boolean = false;
-  @property() private _hasDoneInitialLoad: boolean = false;
-  @property() private _todoDefaultSet: boolean = false;
+  @property() private _isNewTaskVisible: boolean;
+  @property() private _newTaskBeingAdded: boolean;
+  @property() private _newTaskName: string;
+  @property() private _newTaskDueDate: Date;
+  @property() private _newTaskGroupId: string;
+  @property() private _newTaskFolderId: string;
+  @property() private _groups: ITaskGroup[];
+  @property() private _folders: ITaskFolder[];
+  @property() private _tasks: ITask[];
+  @property() private _hiddenTasks: string[];
+  @property() private _loadingTasks: string[];
+  @property() private _inTaskLoad: boolean;
+  @property() private _hasDoneInitialLoad: boolean;
+  @property() private _todoDefaultSet: boolean;
 
   @property() private _currentGroup: string;
   @property() private _currentFolder: string;
-  @property() private _currentTask: ITask;
-
-  @property() private isPeoplePickerVisible: boolean = false;
 
   private _me: User = null;
-  private providerUpdateCallback: () => void | any;
-  private handleWindowClick: (event: MouseEvent) => void;
+  private previousMediaQuery: ComponentMediaQuery;
 
   constructor() {
     super();
-    this.providerUpdateCallback = () => this.loadTasks();
-    this.handleWindowClick = () => this.hidePeoplePicker();
+    this._newTaskName = '';
+    this._newTaskDueDate = null;
+    this._newTaskGroupId = '';
+    this._newTaskFolderId = '';
+    this._groups = [];
+    this._folders = [];
+    this._tasks = [];
+    this._hiddenTasks = [];
+    this._loadingTasks = [];
+
+    this.previousMediaQuery = this.mediaQuery;
+    this.onResize = this.onResize.bind(this);
   }
 
   /**
@@ -238,8 +302,7 @@ export class MgtTasks extends MgtTemplatedComponent {
    */
   public connectedCallback() {
     super.connectedCallback();
-    Providers.onProviderUpdated(this.providerUpdateCallback);
-    window.addEventListener('click', this.handleWindowClick);
+    window.addEventListener('resize', this.onResize);
   }
 
   /**
@@ -248,8 +311,7 @@ export class MgtTasks extends MgtTemplatedComponent {
    * @memberof MgtTasks
    */
   public disconnectedCallback() {
-    Providers.removeProviderUpdatedListener(this.providerUpdateCallback);
-    window.removeEventListener('click', this.handleWindowClick);
+    window.removeEventListener('resize', this.onResize);
     super.disconnectedCallback();
   }
 
@@ -286,7 +348,7 @@ export class MgtTasks extends MgtTemplatedComponent {
       this._inTaskLoad = false;
       this._todoDefaultSet = false;
 
-      this.loadTasks();
+      this.requestStateUpdate();
     }
   }
 
@@ -297,9 +359,11 @@ export class MgtTasks extends MgtTemplatedComponent {
    * Setting properties inside this method will trigger the element to update
    * again after this update cycle completes.
    *
-   * * @param _changedProperties Map of changed properties with old values
+   * @param _changedProperties Map of changed properties with old values
    */
-  protected firstUpdated() {
+  protected firstUpdated(changedProperties) {
+    super.firstUpdated(changedProperties);
+
     if (this.initialId && !this._currentGroup) {
       if (this.dataSource === TasksSource.planner) {
         this._currentGroup = this.initialId;
@@ -311,8 +375,6 @@ export class MgtTasks extends MgtTemplatedComponent {
     if (this.dataSource === TasksSource.planner && this.initialBucketId && !this._currentFolder) {
       this._currentFolder = this.initialBucketId;
     }
-
-    this.loadTasks();
   }
 
   /**
@@ -337,9 +399,7 @@ export class MgtTasks extends MgtTemplatedComponent {
     if (!this.hideHeader) {
       header = html`
         <div class="Header">
-          <span class="PlannerTitle">
-            ${this.renderPlanOptions()}
-          </span>
+          ${this.renderPlanOptions()}
         </div>
       `;
     }
@@ -359,7 +419,7 @@ export class MgtTasks extends MgtTemplatedComponent {
    * @returns
    * @memberof MgtTasks
    */
-  private async loadTasks() {
+  protected async loadState() {
     const ts = this.getTaskSource();
     if (!ts) {
       return;
@@ -373,7 +433,8 @@ export class MgtTasks extends MgtTemplatedComponent {
     this._inTaskLoad = true;
     let meTask;
     if (!this._me) {
-      meTask = provider.graph.getMe();
+      const graph = provider.graph.forComponent(this);
+      meTask = getMe(graph);
     }
 
     if (this.groupId && this.dataSource === TasksSource.planner) {
@@ -394,6 +455,13 @@ export class MgtTasks extends MgtTemplatedComponent {
 
     this._inTaskLoad = false;
     this._hasDoneInitialLoad = true;
+  }
+
+  private onResize() {
+    if (this.mediaQuery !== this.previousMediaQuery) {
+      this.previousMediaQuery = this.mediaQuery;
+      this.requestUpdate();
+    }
   }
 
   private async _loadTargetTodoTasks(ts: ITaskSource) {
@@ -492,7 +560,7 @@ export class MgtTasks extends MgtTemplatedComponent {
 
     this._newTaskBeingAdded = true;
     await ts.addTask(newTask);
-    await this.loadTasks();
+    await this.requestStateUpdate();
     this._newTaskBeingAdded = false;
     this.isNewTaskVisible = false;
   }
@@ -504,7 +572,7 @@ export class MgtTasks extends MgtTemplatedComponent {
     }
     this._loadingTasks = [...this._loadingTasks, task.id];
     await ts.setTaskComplete(task.id, task.eTag);
-    await this.loadTasks();
+    await this.requestStateUpdate();
     this._loadingTasks = this._loadingTasks.filter(id => id !== task.id);
   }
 
@@ -516,7 +584,7 @@ export class MgtTasks extends MgtTemplatedComponent {
 
     this._loadingTasks = [...this._loadingTasks, task.id];
     await ts.setTaskIncomplete(task.id, task.eTag);
-    await this.loadTasks();
+    await this.requestStateUpdate();
     this._loadingTasks = this._loadingTasks.filter(id => id !== task.id);
   }
 
@@ -528,7 +596,7 @@ export class MgtTasks extends MgtTemplatedComponent {
 
     this._hiddenTasks = [...this._hiddenTasks, task.id];
     await ts.removeTask(task.id, task.eTag);
-    await this.loadTasks();
+    await this.requestStateUpdate();
     this._hiddenTasks = this._hiddenTasks.filter(id => id !== task.id);
   }
 
@@ -593,7 +661,7 @@ export class MgtTasks extends MgtTemplatedComponent {
     if (task) {
       this._loadingTasks = [...this._loadingTasks, task.id];
       await ts.assignPeopleToTask(task.id, peopleObj, task.eTag);
-      await this.loadTasks();
+      await this.requestStateUpdate();
       this._loadingTasks = this._loadingTasks.filter(id => id !== task.id);
     }
   }
@@ -639,7 +707,7 @@ export class MgtTasks extends MgtTemplatedComponent {
       this.readOnly || this._isNewTaskVisible
         ? null
         : html`
-            <span
+            <button
               class="AddBarItem NewTaskButton"
               @click="${() => {
                 this.isNewTaskVisible = !this.isNewTaskVisible;
@@ -647,7 +715,7 @@ export class MgtTasks extends MgtTemplatedComponent {
             >
               <span class="TaskIcon">\uE710</span>
               <span>Add</span>
-            </span>
+            </button>
           `;
 
     if (this.dataSource === TasksSource.planner) {
@@ -702,9 +770,9 @@ export class MgtTasks extends MgtTemplatedComponent {
           `;
 
       return html`
-        <span class="TitleCont">
+        <div class="TitleCont">
           ${groupSelect} ${divider} ${!this._currentGroup ? null : folderSelect}
-        </span>
+        </div>
         ${addButton}
       `;
     } else {
@@ -766,13 +834,13 @@ export class MgtTasks extends MgtTemplatedComponent {
         ? null
         : this._currentGroup
         ? html`
-            <span class="TaskDetail TaskAssignee">
+            <span class="NewTaskGroup">
               ${this.renderPlannerIcon()}
               <span>${this.getPlanTitle(this._currentGroup)}</span>
             </span>
           `
         : html`
-            <span class="TaskDetail TaskAssignee">
+            <span class="NewTaskGroup">
               ${this.renderPlannerIcon()}
               <select
                 .value="${this._newTaskGroupId}"
@@ -799,13 +867,13 @@ export class MgtTasks extends MgtTemplatedComponent {
     }
     const taskFolder = this._currentFolder
       ? html`
-          <span class="TaskDetail TaskBucket">
+          <span class="NewTaskBucket">
             ${this.renderBucketIcon()}
             <span>${this.getFolderName(this._currentFolder)}</span>
           </span>
         `
       : html`
-          <span class="TaskDetail TaskBucket">
+          <span class="NewTaskBucket">
             ${this.renderBucketIcon()}
             <select
               .value="${this._newTaskFolderId}"
@@ -823,8 +891,7 @@ export class MgtTasks extends MgtTemplatedComponent {
         `;
 
     const taskDue = html`
-      <span class="TaskDetail TaskDue">
-        ${this.renderCalendarIcon()}
+      <span class="NewTaskDue">
         <input
           type="date"
           label="new-taskDate-input"
@@ -844,6 +911,7 @@ export class MgtTasks extends MgtTemplatedComponent {
     `;
 
     const taskPeople = this.dataSource === TasksSource.todo ? null : this.renderAssignedPeople(null);
+
     const taskAdd = this._newTaskBeingAdded
       ? html`
           <div class="TaskAddButtonContainer"></div>
@@ -866,9 +934,8 @@ export class MgtTasks extends MgtTemplatedComponent {
             <div class="TaskTitle">
               ${taskTitle}
             </div>
-            <hr />
             <div class="TaskDetails">
-              ${group} ${taskFolder} ${taskPeople} ${taskDue}
+              ${group} ${taskFolder} ${taskDue} ${taskPeople}
             </div>
           </div>
         </div>
@@ -877,39 +944,32 @@ export class MgtTasks extends MgtTemplatedComponent {
     `;
   }
 
-  private showPeoplePicker(task: ITask) {
-    if (this.isPeoplePickerVisible) {
-      const isCurrentTask = task === this._currentTask;
-      if (isCurrentTask) {
-        this.hidePeoplePicker();
-        return;
-      }
-    }
-    this._currentTask = task;
-    this.isPeoplePickerVisible = true;
-
-    // logic for already created tasks
+  private togglePeoplePicker(task: ITask) {
     const picker = this.getPeoplePicker(task);
     const mgtPeople = this.getMgtPeople(task);
+    const flyout = this.getFlyout(task);
 
-    if (picker && mgtPeople) {
-      picker.selectedPeople = mgtPeople.people;
-      setTimeout(() => {
-        picker.focus();
-      }, 50);
+    if (picker && mgtPeople && flyout) {
+      if (flyout.isOpen) {
+        flyout.close();
+      } else {
+        picker.selectedPeople = mgtPeople.people;
+        flyout.open();
+        window.requestAnimationFrame(() => {
+          picker.focus();
+        });
+      }
     }
   }
 
-  private hidePeoplePicker() {
-    const picker = this.getPeoplePicker(this._currentTask);
-    const mgtPeople = this.getMgtPeople(this._currentTask);
+  private updateAssignedPeople(task: ITask) {
+    const picker = this.getPeoplePicker(task);
+    const mgtPeople = this.getMgtPeople(task);
 
-    if (picker) {
+    if (picker && picker.selectedPeople !== mgtPeople.people) {
       mgtPeople.people = picker.selectedPeople;
-      this.assignPeople(this._currentTask, picker.selectedPeople);
+      this.assignPeople(task, picker.selectedPeople);
     }
-    this.isPeoplePickerVisible = false;
-    this._currentTask = null;
   }
 
   private getPeoplePicker(task: ITask): MgtPeoplePicker {
@@ -924,6 +984,13 @@ export class MgtTasks extends MgtTemplatedComponent {
     const mgtPeople = this.renderRoot.querySelector(`.people-${taskId}`) as MgtPeople;
 
     return mgtPeople;
+  }
+
+  private getFlyout(task: ITask): MgtFlyout {
+    const taskId = task ? task.id : 'newTask';
+    const flyout = this.renderRoot.querySelector(`.flyout-${taskId}`) as MgtFlyout;
+
+    return flyout;
   }
 
   private renderTask(task: ITask) {
@@ -949,7 +1016,7 @@ export class MgtTasks extends MgtTemplatedComponent {
       : null;
 
     const taskCheck = html`
-      <span class=${classMap(taskCheckClasses)}>${taskCheckContent}</span>
+      <span class=${classMap(taskCheckClasses)}><span class="TaskCheckContent">${taskCheckContent}</span></span>
     `;
 
     const groupTitle = this._currentGroup ? null : this.getPlanTitle(task.topParentId);
@@ -968,28 +1035,27 @@ export class MgtTasks extends MgtTemplatedComponent {
         this.dataSource === TasksSource.todo || this._currentGroup
           ? null
           : html`
-              <span class="TaskDetail TaskAssignee">
+              <div class="TaskDetail TaskGroup">
                 ${this.renderPlannerIcon()}
                 <span>${this.getPlanTitle(task.topParentId)}</span>
-              </span>
+              </div>
             `;
 
       const folder = this._currentFolder
         ? null
         : html`
-            <span class="TaskDetail TaskBucket">
+            <div class="TaskDetail TaskBucket">
               ${this.renderBucketIcon()}
               <span>${this.getFolderName(task.immediateParentId)}</span>
-            </span>
+            </div>
           `;
 
       const taskDue = !dueDate
         ? null
         : html`
-            <span class="TaskDetail TaskDue">
-              ${this.renderCalendarIcon()}
-              <span>${getShortDateString(dueDate)}</span>
-            </span>
+            <div class="TaskDetail TaskDue">
+              <span>Due ${getShortDateString(dueDate)}</span>
+            </div>
           `;
 
       const taskPeople = this.dataSource !== TasksSource.todo ? this.renderAssignedPeople(task) : null;
@@ -998,23 +1064,22 @@ export class MgtTasks extends MgtTemplatedComponent {
         <div class="TaskTitle">
           ${name}
         </div>
-        <div class="TaskDetails">
-          ${group} ${folder} ${taskPeople} ${taskDue}
-        </div>
+        ${group} ${folder} ${taskPeople} ${taskDue}
       `;
     }
 
-    const taskOptions = this.readOnly
-      ? null
-      : html`
-          <div class="TaskOptions">
-            <mgt-dot-options
-              .options="${{
-                'Delete Task': () => this.removeTask(task)
-              }}"
-            ></mgt-dot-options>
-          </div>
-        `;
+    const taskOptions =
+      this.readOnly || this.hideOptions
+        ? null
+        : html`
+            <div class="TaskOptions">
+              <mgt-dot-options
+                .options="${{
+                  'Delete Task': () => this.removeTask(task)
+                }}"
+              ></mgt-dot-options>
+            </div>
+          `;
 
     return html`
       <div
@@ -1052,17 +1117,25 @@ export class MgtTasks extends MgtTemplatedComponent {
           >
             ${taskCheck}
           </span>
-          <div class="TaskDetailsContainer">
+          <div class="TaskDetailsContainer ${this.mediaQuery} ${this._currentGroup ? 'NoPlan' : ''}">
             ${taskDetails}
           </div>
+          ${taskOptions}
+
+          <div class="Divider"></div>
         </div>
-        ${taskOptions}
       </div>
     `;
   }
 
   private renderAssignedPeople(task: ITask) {
     let assignedPeopleHTML = null;
+
+    const taskAssigneeClasses = {
+      NewTaskAssignee: task === null,
+      TaskAssignee: task !== null,
+      TaskDetail: task !== null
+    };
 
     const assignedPeople = task
       ? Object.keys(task.assignments).map(key => {
@@ -1077,25 +1150,23 @@ export class MgtTasks extends MgtTemplatedComponent {
     `;
 
     const taskId = task ? task.id : 'newTask';
+    taskAssigneeClasses[`flyout-${taskId}`] = true;
 
     assignedPeopleHTML = html`
       <mgt-people
         class="people-${taskId}"
         .userIds="${assignedPeople}"
-        .personCardInteraction=${this.isPeoplePickerVisible ? PersonCardInteraction.none : PersonCardInteraction.hover}
+        .personCardInteraction=${PersonCardInteraction.none}
+        @click=${(e: MouseEvent) => {
+          this.togglePeoplePicker(task);
+          e.stopPropagation();
+        }}
         >${noPeopleTemplate}
       </mgt-people>
     `;
 
     return html`
-      <mgt-flyout
-        class="TaskDetail TaskPeople"
-        @click=${(e: MouseEvent) => {
-          this.showPeoplePicker(task);
-          e.stopPropagation();
-        }}
-        .isOpen=${this.isPeoplePickerVisible && task === this._currentTask}
-      >
+      <mgt-flyout light-dismiss class=${classMap(taskAssigneeClasses)} @closed=${e => this.updateAssignedPeople(task)}>
         ${assignedPeopleHTML}
         <div slot="flyout" class=${classMap({ Picker: true })}>
           <mgt-people-picker
@@ -1108,7 +1179,7 @@ export class MgtTasks extends MgtTemplatedComponent {
   }
 
   private handleTaskClick(task: ITask) {
-    if (task && !this.isPeoplePickerVisible) {
+    if (task) {
       this.fireCustomEvent('taskClick', { task: task._raw });
     }
   }
@@ -1123,14 +1194,6 @@ export class MgtTasks extends MgtTemplatedComponent {
           <div class="TaskDetailsContainer">
             <div class="TaskTitle"></div>
             <div class="TaskDetails">
-              <span class="TaskDetail">
-                <div class="TaskDetailIcon"></div>
-                <div class="TaskDetailName"></div>
-              </span>
-              <span class="TaskDetail">
-                <div class="TaskDetailIcon"></div>
-                <div class="TaskDetailName"></div>
-              </span>
               <span class="TaskDetail">
                 <div class="TaskDetailIcon"></div>
                 <div class="TaskDetailName"></div>
@@ -1186,27 +1249,17 @@ export class MgtTasks extends MgtTemplatedComponent {
     `;
   }
 
-  private renderCalendarIcon() {
-    return html`
-      <svg width="20" height="18" viewBox="0 0 20 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path
-          d="M12 7H11V8H12V7ZM9 13H8V14H9V13ZM6 7H5V8H6V7ZM9 7H8V8H9V7ZM12 9H11V10H12V9ZM15 9H14V10H15V9ZM6 9H5V10H6V9ZM9 9H8V10H9V9ZM12 11H11V12H12V11ZM15 11H14V12H15V11ZM6 11H5V12H6V11ZM9 11H8V12H9V11ZM12 13H11V14H12V13ZM15 13H14V14H15V13ZM2 2V16H18V2H15V1H14V2H6V1H5V2H2ZM17 3V5H3V3H5V4H6V3H14V4H15V3H17ZM3 15V6H17V15H3Z"
-          fill="#3C3C3C"
-        />
-      </svg>
-    `;
-  }
-
   private getTaskSource(): ITaskSource {
     const p = Providers.globalProvider;
     if (!p || p.state !== ProviderState.SignedIn) {
       return null;
     }
 
+    const graph = p.graph.forComponent(this);
     if (this.dataSource === TasksSource.planner) {
-      return new PlannerTaskSource(p.graph);
+      return new PlannerTaskSource(graph);
     } else if (this.dataSource === TasksSource.todo) {
-      return new TodoTaskSource(p.graph);
+      return new TodoTaskSource(graph);
     } else {
       return null;
     }

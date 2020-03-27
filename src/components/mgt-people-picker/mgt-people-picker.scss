@@ -21,6 +21,9 @@ $people-list-background-color: var(--people-list-background-color, white);
 
 :host {
   border-radius: 2px;
+  font-family: var(--default-font-family);
+  font-style: normal;
+  font-weight: normal;
 }
 :host .root,
 mgt-people-picker .root {
@@ -35,21 +38,15 @@ mgt-people-picker .people-picker {
   padding-bottom: 8px;
 }
 
-:host .people-list,
-mgt-people-picker .people-list {
-  position: absolute;
-  margin: 7px 0px 0px 0px;
+:host .flyout-root,
+mgt-people-picker .flyout-root {
   padding: 0;
-  box-shadow: 0px 1.3289px 2.65781px rgba(180, 180, 180, 0.182), 0px 1.3289px 2.65781px rgba(68, 68, 68, 0.3);
   border-radius: 2px;
   background-color: $people-list-background-color;
-  z-index: 1; /* Sit on top */
   width: 100%;
+  overflow-y: auto;
   text-align: left;
   list-style-type: none;
-  font-family: Segoe UI;
-  font-style: normal;
-  font-weight: normal;
 
   li {
     cursor: pointer;
@@ -70,7 +67,6 @@ mgt-people-picker .people-selected-input {
   border: none;
   line-height: normal;
   outline: none;
-  font-family: Segoe UI;
   font-style: normal;
   font-weight: normal;
   font-size: 14px;
@@ -85,7 +81,6 @@ mgt-people-picker .people-selected-list {
   margin: 0 0 0 0;
   list-style-type: none;
   padding-left: 10px;
-  font-family: Segoe UI;
   font-style: normal;
   font-weight: normal;
 }
@@ -120,10 +115,8 @@ mgt-people-picker .people-person {
 mgt-people-picker .list-person {
   display: flex;
   flex-direction: row;
-  flex-wrap: wrap;
   align-items: center;
   padding: 12px;
-  font-family: Segoe UI;
   font-style: normal;
   font-weight: 600;
   font-size: 14px;
@@ -133,8 +126,8 @@ mgt-people-picker .list-person {
   }
 }
 
-:host .people-person-list-fill,
-mgt-people-picker .people-person-list-fill {
+:host .list-person.focused,
+mgt-people-picker .list-person.focused {
   background-color: #f1f1f1;
 }
 
@@ -150,8 +143,8 @@ mgt-people-picker .people-person-text {
 mgt-people-picker .input-search {
   margin: 7px 2px 0px 3px;
 }
-:host .input-search-start,
-mgt-people-picker .input-search-start {
+:host .input-search.input-search--start,
+mgt-people-picker .input-search.input-search--start {
   margin: 7px 0px 0px 0px;
   line-height: normal;
   margin-inline-start: 0px;
@@ -193,7 +186,6 @@ mgt-people-picker .person-display-name {
   white-space: nowrap;
   text-overflow: ellipsis;
   margin-left: 8px;
-  font-family: Segoe UI;
   font-style: normal;
   font-weight: 600;
   font-size: 14px;
@@ -223,6 +215,8 @@ mgt-people-picker .loading-text {
   line-height: 19px;
   text-align: center;
   color: #232222;
+  margin-left: 50px;
+  margin-right: 50px;
 }
 
 :host .SearchErrorIcon,
@@ -234,8 +228,7 @@ mgt-people-picker .SearchErrorIcon {
 
 :host .message-parent,
 mgt-people-picker .message-parent {
-  margin-top: 30px;
-  margin-bottom: 30px;
+  margin: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -259,4 +252,5 @@ mgt-people-picker .people-person-text-area {
   margin-left: 13px;
   flex: 1 1 0;
   max-height: 40px;
+  overflow: hidden;
 }

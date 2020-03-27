@@ -36,3 +36,7 @@ testResults/junit.xml
 package-lock.json
 
 *-css.ts
+
+# storybook
+storybook-static/
+custom-elements.json

@@ -95,6 +95,7 @@ export function getDayOfWeekString(day: number): string {
       return 'Day';
   }
 }
+
 /**
  * retrieve the days in the month provided by number
  *
@@ -124,6 +125,7 @@ export function getDaysInMonth(monthNum: number): number {
       return 31;
   }
 }
+
 /**
  * returns serialized date from month number and year number
  *
@@ -142,6 +144,7 @@ export function getDateFromMonthYear(month: number, year: number) {
 
   return new Date(`${yearStr}-${monthStr}-1T12:00:00-${new Date().getTimezoneOffset() / 60}`);
 }
+
 /**
  * ensures one call at a time
  *
@@ -160,6 +163,7 @@ export function debounce(func, time) {
     timeout = setTimeout(functionCall, time);
   };
 }
+
 /**
  * Crude implementation of equivalence between the two specified arguments.
  *
@@ -170,6 +174,7 @@ export function debounce(func, time) {
 export function equals(o1: any, o2: any) {
   return equalsInternal(o1, o2, new Set());
 }
+
 /**
  * Not exposed as it would undesirably leak implementation detail (`refs` argument).
  *
@@ -208,4 +213,59 @@ function equalsInternal(o1: any, o2: any, refs: Set<object>) {
   }
   // Everything else requires strict equality (e.g. primitives, functions, dates)
   return o1 === o2;
+}
+
+/**
+ * Compares two arrays if the elements are equals
+ * Should be used for arrays of primitive types
+ *
+ * @export
+ * @template T the type of the elements in the array (should be primitive)
+ * @param {T[]} arr1
+ * @param {T[]} arr2
+ * @returns true if both arrays contain the same items or if both arrays are null or empty
+ */
+export function arraysAreEqual<T>(arr1: T[], arr2: T[]) {
+  if (arr1 === arr2) {
+    return true;
+  }
+
+  if (!arr1 || !arr2) {
+    return false;
+  }
+
+  if (arr1.length !== arr2.length) {
+    return false;
+  }
+
+  if (arr1.length === 0) {
+    return true;
+  }
+
+  const setArr1 = new Set(arr1);
+
+  for (const i of arr2) {
+    if (!setArr1.has(i)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+/**
+ * converts a blob to base64 encoding
+ *
+ * @param {Blob} blob
+ * @returns {Promise<string>}
+ */
+export function blobToBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = _ => {
+      resolve(reader.result as string);
+    };
+    reader.readAsDataURL(blob);
+  });
 }

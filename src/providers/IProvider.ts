@@ -8,7 +8,7 @@
 import { AuthenticationProvider } from '@microsoft/microsoft-graph-client/lib/es/IAuthenticationProvider';
 import { AuthenticationProviderOptions } from '@microsoft/microsoft-graph-client/lib/es/IAuthenticationProviderOptions';
 import { Graph } from '../Graph';
-import { EventDispatcher } from './EventDispatcher';
+import { EventDispatcher, EventHandler } from '../utils/EventDispatcher';
 /**
  * Provider Type to be extended for implmenting new providers
  *
@@ -113,11 +113,6 @@ export abstract class IProvider implements AuthenticationProvider {
 }
 
 /**
- * An EventHandler for custom events
- */
-export type EventHandler<E> = (event: E) => void;
-
-/**
  * loginChangedEvent
  *
  * @export
@@ -159,7 +154,7 @@ export enum ProviderState {
    */
   SignedOut,
   /**
-   * SignedIn = 1
+   * SignedIn = 2
    */
   SignedIn
 }

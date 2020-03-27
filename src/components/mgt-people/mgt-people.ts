@@ -6,11 +6,15 @@
  */
 
 import * as MicrosoftGraph from '@microsoft/microsoft-graph-types';
-import { customElement, html, property } from 'lit-element';
+import { customElement, html, property, TemplateResult } from 'lit-element';
+import { repeat } from 'lit-html/directives/repeat';
+import { getPeople, getPeopleFromGroup } from '../../graph/graph.people';
+import { getUsersForUserIds } from '../../graph/graph.user';
 import { Providers } from '../../Providers';
 import { ProviderState } from '../../providers/IProvider';
 import '../../styles/fabric-icon-font';
-import '../mgt-person/mgt-person';
+import { arraysAreEqual } from '../../utils/Utils';
+import { IDynamicPerson } from '../mgt-person/mgt-person';
 import { MgtTemplatedComponent } from '../templatedComponent';
 import { PersonCardInteraction } from './../PersonCardInteraction';
 import { styles } from './mgt-people-css';
@@ -21,6 +25,9 @@ import { styles } from './mgt-people-css';
  * @export
  * @class MgtPeople
  * @extends {MgtTemplatedComponent}
+ *
+ * @cssprop --list-margin - {String} List margin for component
+ * @cssprop --avatar-margin - {String} Margin for each person
  */
 @customElement('mgt-people')
 export class MgtPeople extends MgtTemplatedComponent {
@@ -33,26 +40,6 @@ export class MgtPeople extends MgtTemplatedComponent {
   }
 
   /**
-   * containing array of people used in the component.
-   * @type {Array<MgtPersonDetails>}
-   */
-  @property({
-    attribute: 'people',
-    type: Object
-  })
-  public people: Array<MicrosoftGraph.User | MicrosoftGraph.Person | MicrosoftGraph.Contact> = null;
-
-  /**
-   * developer determined max people shown in component
-   * @type {number}
-   */
-  @property({
-    attribute: 'show-max',
-    type: Number
-  })
-  public showMax: number = 3;
-
-  /**
    * determines if agenda events come from specific group
    * @type {string}
    */
@@ -60,7 +47,16 @@ export class MgtPeople extends MgtTemplatedComponent {
     attribute: 'group-id',
     type: String
   })
-  public groupId: string;
+  public get groupId(): string {
+    return this._groupId;
+  }
+  public set groupId(value) {
+    if (this._groupId === value) {
+      return;
+    }
+    this._groupId = value;
+    this.requestStateUpdate(true);
+  }
 
   /**
    * user id array
@@ -70,10 +66,39 @@ export class MgtPeople extends MgtTemplatedComponent {
   @property({
     attribute: 'user-ids',
     converter: (value, type) => {
-      return value.split(',');
+      return value.split(',').map(v => v.trim());
     }
   })
-  public userIds: string[];
+  public get userIds(): string[] {
+    return this._userIds;
+  }
+  public set userIds(value: string[]) {
+    if (arraysAreEqual(this._userIds, value)) {
+      return;
+    }
+    this._userIds = value;
+    this.requestStateUpdate(true);
+  }
+
+  /**
+   * containing array of people used in the component.
+   * @type {Array<MgtPersonDetails>}
+   */
+  @property({
+    attribute: 'people',
+    type: Object
+  })
+  public people: IDynamicPerson[];
+
+  /**
+   * developer determined max people shown in component
+   * @type {number}
+   */
+  @property({
+    attribute: 'show-max',
+    type: Number
+  })
+  public showMax: number;
 
   /**
    * Sets how the person-card is invoked
@@ -95,21 +120,27 @@ export class MgtPeople extends MgtTemplatedComponent {
   })
   public personCardInteraction: PersonCardInteraction = PersonCardInteraction.hover;
 
-  private _firstUpdated = false;
+  private _groupId: string;
+  private _userIds: string[];
+
+  constructor() {
+    super();
+
+    this.showMax = 3;
+  }
 
   /**
-   * Invoked when the element is first updated. Implement to perform one time
-   * work on the element after update.
+   * Request to reload the state.
+   * Use reload instead of load to ensure loading events are fired.
    *
-   * Setting properties inside this method will trigger the element to update
-   * again after this update cycle completes.
-   *
-   * * @param _changedProperties Map of changed properties with old values
+   * @protected
+   * @memberof MgtBaseComponent
    */
-  protected firstUpdated() {
-    this._firstUpdated = true;
-    Providers.onProviderUpdated(() => this.loadPeople());
-    this.loadPeople();
+  protected requestStateUpdate(force?: boolean) {
+    if (force) {
+      this.people = null;
+    }
+    return super.requestStateUpdate(force);
   }
 
   /**
@@ -117,74 +148,132 @@ export class MgtPeople extends MgtTemplatedComponent {
    * a lit-html TemplateResult. Setting properties inside this method will *not*
    * trigger the element to update.
    */
-
   protected render() {
-    if (this.people && this.people.length) {
-      return (
-        this.renderTemplate('default', { people: this.people }) ||
-        html`
-          <ul class="people-list">
-            ${this.people.slice(0, this.showMax).map(
-              person =>
-                html`
-                  <li class="people-person">
-                    ${this.renderTemplate('person', { person }, person.displayName) || this.renderPerson(person)}
-                  </li>
-                `
-            )}
-            ${this.people.length > this.showMax
-              ? this.renderTemplate('overflow', {
-                  extra: this.people.length - this.showMax,
-                  max: this.showMax,
-                  people: this.people
-                }) ||
-                html`
-                    <li class="overflow"><span>+${this.people.length - this.showMax}<span></li>
-                  `
-              : null}
-          </ul>
-        `
-      );
-    } else {
-      return this.renderTemplate('no-data', null) || html``;
+    if (this.isLoadingState) {
+      return this.renderLoading();
     }
+
+    if (!this.people || this.people.length === 0) {
+      return this.renderNoData();
+    }
+
+    return this.renderTemplate('default', { people: this.people, max: this.showMax }) || this.renderPeople();
   }
 
-  private async loadPeople() {
-    if (!this._firstUpdated) {
-      return;
-    }
+  /**
+   * Render the loading state.
+   *
+   * @protected
+   * @returns
+   * @memberof MgtPeople
+   */
+  protected renderLoading() {
+    return this.renderTemplate('loading', null) || html``;
+  }
 
+  /**
+   * Render the list of people.
+   *
+   * @protected
+   * @param {*} people
+   * @returns {TemplateResult}
+   * @memberof MgtPeople
+   */
+  protected renderPeople(): TemplateResult {
+    const maxPeople = this.people.slice(0, this.showMax);
+
+    return html`
+      <ul class="people-list">
+        ${repeat(
+          maxPeople,
+          p => p.id,
+          p => html`
+            <li class="people-person">
+              ${this.renderPerson(p)}
+            </li>
+          `
+        )}
+        ${this.people.length > this.showMax ? this.renderOverflow() : null}
+      </ul>
+    `;
+  }
+
+  /**
+   * Render the overflow content to represent any extra people, beyond the max.
+   *
+   * @protected
+   * @returns {TemplateResult}
+   * @memberof MgtPeople
+   */
+  protected renderOverflow(): TemplateResult {
+    const extra = this.people.length - this.showMax;
+    return (
+      this.renderTemplate('overflow', {
+        extra,
+        max: this.showMax,
+        people: this.people
+      }) ||
+      html`
+        <li class="overflow"><span>+${extra}<span></li>
+      `
+    );
+  }
+
+  /**
+   * Render an individual person.
+   *
+   * @protected
+   * @returns {TemplateResult}
+   * @memberof MgtPeople
+   */
+  protected renderPerson(person: MicrosoftGraph.User | MicrosoftGraph.Person | MicrosoftGraph.Contact): TemplateResult {
+    return (
+      this.renderTemplate('person', { person }, person.id) ||
+      // set image to @ to flag the mgt-person component to
+      // query the image from the graph
+      html`
+        <mgt-person
+          .personDetails=${person}
+          .personImage=${'@'}
+          .personCardInteraction=${this.personCardInteraction}
+        ></mgt-person>
+      `
+    );
+  }
+
+  /**
+   * render the no data state.
+   *
+   * @protected
+   * @returns {TemplateResult}
+   * @memberof MgtPeople
+   */
+  protected renderNoData(): TemplateResult {
+    return this.renderTemplate('no-data', null) || html``;
+  }
+
+  /**
+   * load state into the component.
+   *
+   * @protected
+   * @returns
+   * @memberof MgtPeople
+   */
+  protected async loadState() {
     if (!this.people) {
       const provider = Providers.globalProvider;
 
       if (provider && provider.state === ProviderState.SignedIn) {
-        const client = Providers.globalProvider.graph;
+        const graph = provider.graph.forComponent(this);
 
         if (this.groupId) {
-          this.people = await client.getPeopleFromGroup(this.groupId);
+          this.people = await getPeopleFromGroup(graph, this.groupId);
         } else if (this.userIds) {
-          this.people = await Promise.all(
-            this.userIds.map(async userId => {
-              return await client.getUser(userId);
-            })
-          );
+          this.people = await getUsersForUserIds(graph, this.userIds);
         } else {
-          this.people = await client.getPeople();
+          this.people = await getPeople(graph);
         }
       }
     }
-  }
-
-  private renderPerson(person: MicrosoftGraph.Person) {
-    // set image to @ to flag the mgt-person component to
-    // query the image from the graph
-    return html`
-      <mgt-person
-        .personDetails=${person}
-        .personImage=${'@'}
-        .personCardInteraction=${this.personCardInteraction}
-      ></mgt-person>
-    `;
   }
 }
