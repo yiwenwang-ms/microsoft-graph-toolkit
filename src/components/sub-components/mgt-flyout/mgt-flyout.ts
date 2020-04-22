@@ -57,23 +57,20 @@ export class MgtFlyout extends LitElement {
     if (oldValue === value) {
       return;
     }
-
     this._isOpen = value;
-
     window.requestAnimationFrame(() => {
       this.setupWindowEvents(this.isOpen);
       const flyout = this._flyout;
       if (!this.isOpen && flyout) {
         // reset style for next update
         flyout.style.width = null;
-        flyout.style.setProperty('--mgt-flyout-set-width', null);
+        flyout.style['--mgt-flyout-set-width'] = null;
         flyout.style.height = null;
         flyout.style.top = null;
         flyout.style.left = null;
         flyout.style.bottom = null;
       }
     });
-
     this.requestUpdate('isOpen', oldValue);
     this.dispatchEvent(new Event(value ? 'opened' : 'closed'));
   }
@@ -201,53 +198,42 @@ export class MgtFlyout extends LitElement {
     if (!this.isOpen) {
       return;
     }
-
     const anchor = this._anchor;
     const flyout = this._flyout;
-
     if (flyout && anchor) {
       const windowWidth =
         window.innerWidth && document.documentElement.clientWidth
           ? Math.min(window.innerWidth, document.documentElement.clientWidth)
           : window.innerWidth || document.documentElement.clientWidth;
-
       const windowHeight =
         window.innerHeight && document.documentElement.clientHeight
           ? Math.min(window.innerHeight, document.documentElement.clientHeight)
           : window.innerHeight || document.documentElement.clientHeight;
-
       let left: number = 0;
       let bottom: number;
       let top: number = 0;
       let height: number;
       let width: number;
-
       const flyoutRect = flyout.getBoundingClientRect();
       const anchorRect = anchor.getBoundingClientRect();
-
       const windowRect: IWindowSegment = {
         height: windowHeight,
         left: 0,
         top: 0,
         width: windowWidth
       };
-
       if (isWindowSegmentAware()) {
         const segmentAwareWindow = getSegmentAwareWindow();
         const screenSegments = segmentAwareWindow.getWindowSegments();
-
         let anchorSegment: IWindowSegment;
-
         const anchorCenterX = anchorRect.left + anchorRect.width / 2;
         const anchorCenterY = anchorRect.top + anchorRect.height / 2;
-
         for (const segment of screenSegments) {
           if (anchorCenterX >= segment.left && anchorCenterY >= segment.top) {
             anchorSegment = segment;
             break;
           }
         }
-
         if (anchorSegment) {
           windowRect.left = anchorSegment.left;
           windowRect.top = anchorSegment.top;
@@ -255,7 +241,6 @@ export class MgtFlyout extends LitElement {
           windowRect.height = anchorSegment.height;
         }
       }
-
       if (flyoutRect.width + 2 * this._edgePadding > windowRect.width) {
         if (flyoutRect.width > windowRect.width) {
           // flyout is wider than the window
@@ -274,7 +259,6 @@ export class MgtFlyout extends LitElement {
       } else {
         left = anchorRect.left;
       }
-
       if (flyoutRect.height + 2 * this._edgePadding > windowRect.height) {
         if (flyoutRect.height >= windowRect.height) {
           height = windowRect.height;
@@ -299,9 +283,7 @@ export class MgtFlyout extends LitElement {
           top = Math.max(anchorRect.top + anchorRect.height, this._edgePadding);
         }
       }
-
       flyout.style.left = `${left + windowRect.left}px`;
-
       if (typeof bottom !== 'undefined') {
         flyout.style.top = 'unset';
         flyout.style.bottom = `${bottom}px`;
@@ -309,9 +291,7 @@ export class MgtFlyout extends LitElement {
         flyout.style.bottom = 'unset';
         flyout.style.top = `${top + windowRect.top}px`;
       }
-
       flyout.style.height = height ? `${height}px` : null;
-
       if (width) {
         // if we had to set the width, recalculate since the height could have changed
         flyout.style.width = `${width}px`;

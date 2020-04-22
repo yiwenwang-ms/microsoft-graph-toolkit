@@ -7,33 +7,16 @@
 
 import '@webcomponents/webcomponentsjs/webcomponents-bundle';
 
-// minimum needed for sharepoint
-import 'core-js/features/string';
-import 'core-js/features/symbol';
+import '@core-js/features/array';
+import '@core-js/features/array-buffer';
+
+import '@core-js/features/reflect';
+
+import '@core-js/features/string';
+import '@core-js/features/symbol';
 
 import 'regenerator-runtime/runtime';
 import 'whatwg-fetch';
-
-// minimum needed for localhost, causes issues with sharepoint (mgt-login)
-// import 'core-js/features/reflect';
-
-// minimum needed for localhost, causes issues with sharepoint (Console error only)
-// import 'core-js/features/weak-set';
-
-// fixes sharepoint "includes" causes issues with sharepoint + chromium + person-card
-// if (!String.prototype.includes) {
-//   String.prototype.includes = function(search, start) {
-//     'use strict';
-
-//     if (search instanceof RegExp) {
-//       throw TypeError('first argument must not be a RegExp');
-//     }
-//     if (start === undefined) {
-//       start = 0;
-//     }
-//     return this.indexOf(search, start) !== -1;
-//   };
-// }
 
 // https://tc39.github.io/ecma262/#sec-array.prototype.includes
 if (!Array.prototype.includes) {
