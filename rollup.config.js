@@ -89,7 +89,7 @@ const es5Bundle = {
 };
 
 const cjsBundle = {
-  input: ['src/bundle/index.es5.ts'],
+  input: ['src/bundle/index.es6.ts'],
   output: {
     dir: 'dist/commonjs',
     entryFileNames: 'index.js',

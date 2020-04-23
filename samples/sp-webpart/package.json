@@ -22,8 +22,10 @@
     "@types/react-dom": "16.8.3",
     "@types/webpack-env": "1.13.1",
     "@webcomponents/webcomponentsjs": "^2.4.3",
+    "core-js": "^3.6.5",
     "react": "16.8.5",
-    "react-dom": "16.8.5"
+    "react-dom": "16.8.5",
+    "regenerator-runtime": "^0.13.5"
   },
   "resolutions": {
     "@types/react": "16.8.8"
