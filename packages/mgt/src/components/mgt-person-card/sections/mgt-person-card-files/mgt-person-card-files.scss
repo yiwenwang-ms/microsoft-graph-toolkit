@@ -44,6 +44,11 @@
         height: 28px;
         margin-right: 12px;
         background-color: #797775;
+        overflow: hidden;
+
+        img {
+          height: 100%;
+        }
       }
 
       .file__details {

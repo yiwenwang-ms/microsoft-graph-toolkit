@@ -129,7 +129,19 @@ export class MgtPersonCardFiles extends BasePersonCardSection {
    * @memberof MgtPersonCardFiles
    */
   protected renderFile(file: IFile): TemplateResult {
-    const iconSource = file.thumbnails ? file.thumbnails[0].small.url : null;
+    let icon: TemplateResult;
+    let fileName: string;
+    if (file.thumbnails) {
+      icon = html`
+        <img src="${file.thumbnails[0].small.url}" />
+      `;
+      fileName = file.name;
+    } else {
+      icon = html`
+        <img src="${file.resourceVisualization.previewImageUrl}" />
+      `;
+      fileName = file.resourceVisualization.title;
+    }
 
     const lastModifiedTemplate = file.lastModifiedDateTime
       ? html`
@@ -138,12 +150,10 @@ export class MgtPersonCardFiles extends BasePersonCardSection {
       : null;
 
     return html`
-      <div class="file">
-        <div class="file__icon">
-          <img src="${iconSource}" />
-        </div>
+      <div class="file" @click=${() => this.handleFileClick(file)}>
+        <div class="file__icon">${icon}</div>
         <div class="file__details">
-          <div class="file__name">${file.name}</div>
+          <div class="file__name">${fileName}</div>
           ${lastModifiedTemplate}
         </div>
       </div>
@@ -177,6 +187,11 @@ export class MgtPersonCardFiles extends BasePersonCardSection {
 
     if (me.id === userId) {
       this._files = await getFilesSharedWithMe(betaGraph);
+      if (this._files) {
+        for (const file of this._files) {
+          file.thumbnails = await getThumbnails(graph, file);
+        }
+      }
     } else {
       const emailAddress = getEmailFromGraphEntity(this.personDetails);
       if (emailAddress) {
@@ -184,12 +199,10 @@ export class MgtPersonCardFiles extends BasePersonCardSection {
       }
     }
 
-    if (this._files) {
-      for (const file of this._files) {
-        file.thumbnails = await getThumbnails(graph, file);
-      }
-    }
-
     this.requestUpdate();
+  }
+
+  private handleFileClick(file: IFile): void {
+    window.open(file.webUrl || file.resourceReference.webUrl, '_blank');
   }
 }

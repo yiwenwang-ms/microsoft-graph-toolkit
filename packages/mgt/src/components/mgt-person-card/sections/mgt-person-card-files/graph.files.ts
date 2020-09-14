@@ -6,7 +6,7 @@
  */
 
 import { IGraph } from '@microsoft/mgt-element';
-import { DriveItem, ThumbnailSet } from '@microsoft/microsoft-graph-types';
+import { DriveItem, ThumbnailSet, Trending } from '@microsoft/microsoft-graph-types';
 
 /**
  * Potential file icon types
@@ -23,7 +23,7 @@ export enum IconType {
 /**
  * Display metadata for a file
  */
-export interface IFile extends DriveItem {}
+export interface IFile extends DriveItem, Trending {}
 
 /**
  * Get files shared between me and another user.
@@ -35,7 +35,7 @@ export interface IFile extends DriveItem {}
  * @returns {Promise<IFile[]>}
  */
 export async function getFilesSharedWithUser(graph: IGraph, userId: string): Promise<IFile[]> {
-  const response = await graph.api(`users/${userId}/drive/sharedWithMe`).get();
+  const response = await graph.api(`users/${userId}/insights/trending`).get();
   return response.value || null;
 }
 
