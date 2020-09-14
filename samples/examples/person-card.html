@@ -10,6 +10,16 @@
     </mgt-msal-provider>
     <mgt-login></mgt-login>
 
-    <mgt-person-card person-query="me"></mgt-person-card>
+    <mgt-person-card person-query="me" show-additional-details>
+      <template data-type="additional-details-icon">
+        icon
+      </template>
+      <template data-type="additional-details-compact">
+        Compact view
+      </template>
+      <template data-type="additional-details-full">
+        Full view
+      </template>
+    </mgt-person-card>
   </body>
 </html>

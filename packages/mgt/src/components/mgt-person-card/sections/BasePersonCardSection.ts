@@ -81,6 +81,26 @@ export abstract class BasePersonCardSection extends MgtTemplatedComponent {
   public abstract renderIcon(): TemplateResult;
 
   /**
+   * Render the compact view
+   *
+   * @protected
+   * @abstract
+   * @returns {TemplateResult}
+   * @memberof BasePersonCardSection
+   */
+  public abstract renderCompactView(): TemplateResult;
+
+  /**
+   * Render the full view
+   *
+   * @protected
+   * @abstract
+   * @returns {TemplateResult}
+   * @memberof BasePersonCardSection
+   */
+  public abstract renderFullView(): TemplateResult;
+
+  /**
    * Set the section to compact view mode
    *
    * @returns
@@ -149,26 +169,6 @@ export abstract class BasePersonCardSection extends MgtTemplatedComponent {
       <div class="no-data">No data</div>
     `;
   }
-
-  /**
-   * Render the compact view
-   *
-   * @protected
-   * @abstract
-   * @returns {TemplateResult}
-   * @memberof BasePersonCardSection
-   */
-  protected abstract renderCompactView(): TemplateResult;
-
-  /**
-   * Render the full view
-   *
-   * @protected
-   * @abstract
-   * @returns {TemplateResult}
-   * @memberof BasePersonCardSection
-   */
-  protected abstract renderFullView(): TemplateResult;
 
   /**
    * Navigate the card to a different user.

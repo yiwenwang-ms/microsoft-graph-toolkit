@@ -70,7 +70,7 @@ export class MgtPersonCardOrganization extends BasePersonCardSection {
    * @returns {TemplateResult}
    * @memberof MgtPersonCardOrganization
    */
-  protected renderCompactView(): TemplateResult {
+  public renderCompactView(): TemplateResult {
     let contentTemplate: TemplateResult;
 
     if (this.isLoadingState) {
@@ -96,7 +96,7 @@ export class MgtPersonCardOrganization extends BasePersonCardSection {
    * @returns {TemplateResult}
    * @memberof MgtPersonCardOrganization
    */
-  protected renderFullView(): TemplateResult {
+  public renderFullView(): TemplateResult {
     let contentTemplate: TemplateResult;
 
     if (this.isLoadingState) {

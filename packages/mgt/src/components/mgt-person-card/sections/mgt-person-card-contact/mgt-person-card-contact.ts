@@ -148,7 +148,7 @@ export class MgtPersonCardContact extends BasePersonCardSection {
    * @returns {TemplateResult}
    * @memberof MgtPersonCardContact
    */
-  protected renderCompactView(): TemplateResult {
+  public renderCompactView(): TemplateResult {
     let contentTemplate: TemplateResult;
 
     if (this.isLoadingState) {
@@ -182,7 +182,7 @@ export class MgtPersonCardContact extends BasePersonCardSection {
    * @returns {TemplateResult}
    * @memberof MgtPersonCardContact
    */
-  protected renderFullView(): TemplateResult {
+  public renderFullView(): TemplateResult {
     let contentTemplate: TemplateResult;
 
     if (this.isLoadingState) {

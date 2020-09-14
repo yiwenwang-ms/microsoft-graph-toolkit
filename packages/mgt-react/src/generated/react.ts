@@ -87,6 +87,7 @@ export type PersonCardProps = {
 	inheritDetails?: boolean;
 	showPresence?: boolean;
 	personPresence?: MicrosoftGraphBeta.Presence;
+	showAdditionalDetails?: boolean;
 	templateConverters?: MgtElement.TemplateContext;
 	templateContext?: MgtElement.TemplateContext;
 	useShadowRoot?: boolean;

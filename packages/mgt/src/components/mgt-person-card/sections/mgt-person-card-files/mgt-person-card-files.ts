@@ -99,7 +99,7 @@ export class MgtPersonCardFiles extends BasePersonCardSection {
    * @returns {TemplateResult}
    * @memberof MgtPersonCardFiles
    */
-  protected renderFullView(): TemplateResult {
+  public renderFullView(): TemplateResult {
     let contentTemplate: TemplateResult;
 
     if (this.isLoadingState) {

@@ -25,6 +25,7 @@ import { MgtPersonCardProfile } from './sections/mgt-person-card-profile/mgt-per
 import { Presence } from '@microsoft/microsoft-graph-types-beta';
 import { getUserPresence } from '../../graph/graph.presence';
 import { getSvg, SvgIcon } from '../../utils/SvgHelper';
+import { AdditionalDetailsSection } from './sections/AdditionalDetailsSection';
 
 /**
  * Web Component used to show detailed data for a person in the Microsoft Graph
@@ -171,6 +172,18 @@ export class MgtPersonCard extends MgtTemplatedComponent {
   public personPresence: Presence;
 
   /**
+   * Determines if the person card component renders the additional details section
+   *
+   * @type {boolean}
+   * @memberof MgtPersonCard
+   */
+  @property({
+    attribute: 'show-additional-details',
+    type: Boolean
+  })
+  public showAdditionalDetails: boolean;
+
+  /**
    * The subsections for display in the lower part of the card
    *
    * @protected
@@ -178,6 +191,8 @@ export class MgtPersonCard extends MgtTemplatedComponent {
    * @memberof MgtPersonCard
    */
   protected sections: BasePersonCardSection[];
+
+  protected additionalDetailsSection: AdditionalDetailsSection;
 
   private _history: IDynamicPerson[];
   private _chatInput: string;
@@ -189,12 +204,18 @@ export class MgtPersonCard extends MgtTemplatedComponent {
     this._chatInput = '';
     this._currentSection = null;
     this._history = [];
+    this.additionalDetailsSection = new AdditionalDetailsSection(
+      () => this.renderTemplate('additional-details-icon', this.personDetails),
+      () => this.renderTemplate('additional-details-compact', this.personDetails),
+      () => this.renderTemplate('additional-details-full', this.personDetails)
+    );
     this.sections = [
       new MgtPersonCardContact(),
       new MgtPersonCardOrganization(),
       new MgtPersonCardMessages(),
       // new MgtPersonCardFiles(),
-      new MgtPersonCardProfile()
+      new MgtPersonCardProfile(),
+      this.additionalDetailsSection
     ];
   }
 
@@ -520,10 +541,11 @@ export class MgtPersonCard extends MgtTemplatedComponent {
   protected renderSectionNavigation(): TemplateResult {
     const currentSectionIndex = this._currentSection ? this.sections.indexOf(this._currentSection) : -1;
 
-    const navIcons = this.sections.map((section, i, a) => {
+    let navIcons = this.sections.map((section, i) => {
       const classes = classMap({
         active: i === currentSectionIndex,
-        'section-nav__icon': true
+        'section-nav__icon': true,
+        hidden: !this.showAdditionalDetails && section === this.additionalDetailsSection
       });
       return html`
         <button class=${classes} @click=${() => this.updateCurrentSection(section)}>
@@ -531,6 +553,11 @@ export class MgtPersonCard extends MgtTemplatedComponent {
         </button>
       `;
     });
+
+    if (this.showAdditionalDetails) {
+      const iconTemplate = this.renderTemplate('additional-details-icon', this.personDetails);
+      navIcons.push(iconTemplate);
+    }
 
     const overviewClasses = classMap({
       active: currentSectionIndex === -1,
@@ -552,17 +579,21 @@ export class MgtPersonCard extends MgtTemplatedComponent {
    * @memberof MgtPersonCard
    */
   protected renderOverviewSection(): TemplateResult {
-    const compactTemplates = this.sections.map(
-      section => html`
-        <div class="section">
+    const compactTemplates = this.sections.map(section => {
+      const sectionClasses = classMap({
+        section: true,
+        hidden: !this.showAdditionalDetails && section === this.additionalDetailsSection
+      });
+      return html`
+        <div class="${sectionClasses}">
           <div class="section__header">
             <div class="section__title">${section.displayName}</div>
             <a class="section__show-more" @click=${() => this.updateCurrentSection(section)}>Show more</a>
           </div>
           <div class="section__content">${section.asCompactView()}</div>
         </div>
-      `
-    );
+      `;
+    });
 
     return html`
       <div class="quick-message">

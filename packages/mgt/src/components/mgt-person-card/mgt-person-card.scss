@@ -243,6 +243,10 @@ $person-card-background-color: var(--person-card-background-color, #ffffff);
           fill: #0078d4;
         }
       }
+
+      &.hidden {
+        display: none;
+      }
     }
   }
 
@@ -297,6 +301,10 @@ $person-card-background-color: var(--person-card-background-color, #ffffff);
 
       &:not(:last-child) {
         border-bottom: 1px solid #eaeaea;
+      }
+
+      &.hidden {
+        display: none;
       }
 
       .section__header {

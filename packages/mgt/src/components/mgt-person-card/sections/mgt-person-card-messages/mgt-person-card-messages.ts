@@ -101,7 +101,7 @@ export class MgtPersonCardMessages extends BasePersonCardSection {
    * @returns {TemplateResult}
    * @memberof MgtPersonCardMessages
    */
-  protected renderFullView(): TemplateResult {
+  public renderFullView(): TemplateResult {
     let contentTemplate: TemplateResult;
 
     if (this.isLoadingState) {
