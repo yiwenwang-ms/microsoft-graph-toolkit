@@ -5,8 +5,14 @@ This sample is a React based SharePoint webpart that uses the Microsoft Graph To
 ### Building the code
 
 ```bash
-git clone the repo
-npm i
+# If you haven't already, run these at the repo root to setup the local mgt dependencies.
+npm i -g yarn
+yarn
+cd ./samples/sp-webpart
+```
+
+```bash
+# Run these commands to build the project
 npm i -g gulp
 gulp trust-dev-cert
 gulp
