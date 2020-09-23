@@ -5,14 +5,8 @@ This sample is a React based SharePoint webpart that uses the Microsoft Graph To
 ### Building the code
 
 ```bash
-# If you haven't already, run these at the repo root to setup the local mgt dependencies.
-npm i -g yarn
-yarn
-cd ./samples/sp-webpart
-```
-
-```bash
 # Run these commands to build the project
+npm i
 npm i -g gulp
 gulp trust-dev-cert
 gulp
@@ -57,7 +51,6 @@ You should now be able to test the webpart
 ### Build options
 
 gulp trust-dev-cert
-
 gulp clean
 gulp test
 gulp serve
