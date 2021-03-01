@@ -422,7 +422,12 @@ export class MgtFileList extends MgtTemplatedComponent {
     return (
       this.renderTemplate('file', { file }) ||
       html`
-        <mgt-file class=${fileClasses} .fileDetails=${file} .view=${view}></mgt-file>
+        <mgt-file
+          class=${fileClasses}
+          .fileDetails=${file}
+          .view=${view}
+          @click=${e => this.handleItemSelect(file, e)}
+        ></mgt-file>
       `
     );
   }
