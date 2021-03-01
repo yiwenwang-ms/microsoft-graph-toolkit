@@ -18,6 +18,26 @@ export type AgendaProps = {
 	eventClick?: (e: Event) => void;
 }
 
+export type FileListProps = {
+	fileListQuery?: string;
+	fileQueries?: string[];
+	files?: MicrosoftGraph.DriveItem[];
+	siteId?: string;
+	driveId?: string;
+	groupId?: string;
+	itemId?: string;
+	itemPath?: string;
+	userId?: string;
+	insightType?: OfficeGraphInsightString;
+	isExpanded?: boolean;
+	selectedItem?: MicrosoftGraph.DriveItem;
+	showMax?: number;
+	renderOnScroll?: number;
+	templateContext?: TemplateContext;
+	mediaQuery?: ComponentMediaQuery;
+	fileSelected?: (e: Event) => void;
+}
+
 export type FileProps = {
 	fileQuery?: string;
 	siteId?: string;
@@ -172,6 +192,8 @@ export type TodoProps = {
 }
 
 export const Agenda = wrapMgt<AgendaProps>('mgt-agenda');
+
+export const FileList = wrapMgt<FileListProps>('mgt-file-list');
 
 export const File = wrapMgt<FileProps>('mgt-file');
 

@@ -1,0 +1,82 @@
+/**
+ * -------------------------------------------------------------------------------------------
+ * Copyright (c) Microsoft Corporation.  All Rights Reserved.  Licensed under the MIT License.
+ * See License in the project root for license information.
+ * -------------------------------------------------------------------------------------------
+ */
+
+@import '../../../../../node_modules/office-ui-fabric-core/dist/sass/References';
+@import '../../styles/shared-styles.scss';
+@import './mgt-file-list.theme.scss';
+
+$background-color: var(--file-list-background-color, set-var(background-color, $theme-default, $common));
+$file-item-background-color--hover: var(
+  --file-item-background-color--hover,
+  set-var(list__item__background-color--hover, $theme-default, $common)
+);
+$width: var(--file-list-width);
+$max-height: var(--file-list-max-height);
+
+:host {
+  font-family: $font-family;
+  font-size: $font-size;
+}
+
+:host .file-list-wrapper,
+mgt-file-item .file-list-wrapper {
+  background: $background-color;
+  box-shadow: 0px 3.2px 7.2px rgba(0, 0, 0, 0.132), 0px 0.6px 1.8px rgba(0, 0, 0, 0.108);
+  position: relative;
+  width: $width;
+  max-height: $max-height;
+
+  ul {
+    padding: 0;
+    list-style-type: none;
+  }
+
+  .file-list {
+    display: flex;
+    padding: 0;
+    flex-direction: column;
+    margin: 0;
+    height: $max-height;
+
+    &.scrollable {
+      overflow: scroll;
+    }
+
+    .file-item {
+      border-bottom: var(--file-list-item-border-bottom, 1px solid $gray30);
+      list-style: none;
+
+      &:hover {
+        background-color: $file-item-background-color--hover;
+      }
+    }
+
+    .show-more {
+      border-bottom: none;
+      text-align: center;
+      margin: 1em;
+      list-style-type: none;
+    }
+  }
+
+  .file-list-overflow {
+    content: '';
+    position: absolute;
+    z-index: 1;
+    bottom: 0;
+    left: 0;
+    pointer-events: none;
+    width: 100%;
+    height: 4em;
+    @include file-list__overflow;
+
+    &.fadeout {
+      visibility: hidden;
+      opacity: 0;
+    }
+  }
+}
