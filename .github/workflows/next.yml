@@ -6,8 +6,6 @@ name: Build CI
 on:
   push:
     branches: [next/*]
-    paths:
-      - 'packages/**'
 
 jobs:
   build:
@@ -24,16 +22,8 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           registry-url: 'https://registry.npmjs.org'
-      - run: npm install -g yarn lerna
-      - run: yarn
-      - run: yarn build
-      - run: node scripts/setVersion.js --next
-      - run: lerna exec --scope @microsoft/* -- "npm publish --tag ${GITHUB_REF#refs/heads/}"
-        if: github.repository == 'microsoftgraph/microsoft-graph-toolkit'
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-      - name: Upload a Build Artifact - mgt-spfx Solution
-        uses: actions/upload-artifact@v2
-        with:
-          name: mgt-spfx solution
-          path: packages/mgt-spfx/sharepoint/*
+      - name: Extract branch name
+        shell: bash
+        run: echo "##[set-output name=previewName;]$(echo ${GITHUB_REF#refs/heads/})"
+        id: extract_branch
+      - run: node scripts/setVersion.js --${{ steps.extract_branch.outputs.previewName }}
