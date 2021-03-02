@@ -22,12 +22,8 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           registry-url: 'https://registry.npmjs.org'
-      - name: Extract branch name
+      - name: Extract tag name
         shell: bash
-        run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
-        id: extract_branch
-      - name: Get version prefix
-        shell: bash
-        run: echo "##[set-output name=name;]$(test=${{steps.extract_branch.outputs.branch}};echo ${test/\//-})"
-        id: versionPrefix
-      - run: node scripts/setVersion.js --${{ steps.versionPrefix.outputs.name }}
+        run: echo "##[set-output name=tag;]$(branch=${GITHUB_REF#refs/heads/}; echo ${branch/\//-})"
+        id: extract_tag
+      - run: node scripts/setVersion.js --${{ steps.extract_tag.outputs.tag }}
