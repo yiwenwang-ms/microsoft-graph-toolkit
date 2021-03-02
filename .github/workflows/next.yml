@@ -28,6 +28,6 @@ jobs:
         id: extract_branch
       - name: Get version prefix
         shell: bash
-        run: echo "##[set-output name=name;]$(echo ${{steps.extract_branch.outputs.branch}})"
+        run: echo "##[set-output name=name;]$(echo ${${{steps.extract_branch.outputs.branch}}/next/bla})"
         id: versionPrefix
       - run: node scripts/setVersion.js --${{ steps.versionPrefix.outputs.name }}
