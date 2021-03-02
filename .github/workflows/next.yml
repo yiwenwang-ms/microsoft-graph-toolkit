@@ -24,6 +24,6 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
       - name: Extract tag name
         shell: bash
-        run: echo "##[set-output name=tag;]$(branch=${GITHUB_REF#refs/heads/}; echo ${branch/\//-})"
+        run: echo "##[set-output name=tag;]$(branch=${GITHUB_REF#refs/heads/}; echo ${branch/\//.})"
         id: extract_tag
       - run: node scripts/setVersion.js --${{ steps.extract_tag.outputs.tag }}
