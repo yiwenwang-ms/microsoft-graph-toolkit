@@ -24,6 +24,10 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
       - name: Extract branch name
         shell: bash
-        run: echo "##[set-output name=previewName;]$(echo ${${GITHUB_REF#refs/heads/}//\//-})"
+        run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
         id: extract_branch
-      - run: node scripts/setVersion.js --${{ steps.extract_branch.outputs.previewName }}
+      - name: Get version prefix
+        shell: bash
+        run: echo "##[set-output name=name;]$(echo ${steps.extract_branch.outputs.previewName/\//-})"
+        id: versionPrefix
+      - run: node scripts/setVersion.js --${{ steps.versionPrefix.outputs.name }}
