@@ -5,12 +5,12 @@ const cleanCSS = require('gulp-clean-css');
 const rename = require('gulp-rename');
 var license = require('gulp-header-license');
 
-scssFileHeader = `
+scssFileHeader = (cssLib) => `
 // THIS FILE IS AUTO GENERATED
 // ANY CHANGES WILL BE LOST DURING BUILD
 // MODIFY THE .SCSS FILE INSTEAD
 
-import { css } from 'lit-element';
+import { css } from '${cssLib}';
 /**
  * exports lit-element css
  * @export styles
@@ -35,15 +35,31 @@ versionFile = `${licenseStr}
 export const PACKAGE_VERSION = '[VERSION]';
 `;
 
-function runSass() {
+function runSassLit() {
   return gulp
     .src('src/**/!(shared)*.scss')
     .pipe(sass())
     .pipe(cleanCSS())
-    .pipe(gap.prependText(scssFileHeader))
+    .pipe(gap.prependText(scssFileHeader('lit-element')))
     .pipe(gap.appendText(scssFileFooter))
     .pipe(rename({ extname: '-css.ts' }))
     .pipe(gulp.dest('src/'));
+}
+
+function runSassFast() {
+  return gulp
+    .src('src/**/!(shared)*.scss')
+    .pipe(sass())
+    .pipe(cleanCSS())
+    .pipe(gap.prependText(scssFileHeader('@microsoft/fast-element')))
+    .pipe(gap.appendText(scssFileFooter))
+    .pipe(rename({ extname: '-fast-css.ts' }))
+    .pipe(gulp.dest('src/'));
+}
+
+function runSass() {
+  runSassLit();
+  return runSassFast();
 }
 
 function setLicense() {

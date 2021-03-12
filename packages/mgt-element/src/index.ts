@@ -13,6 +13,7 @@ export * from './BetaGraph';
 export * from './components/baseComponent';
 export * from './components/baseProvider';
 export * from './components/templatedComponent';
+export * from './components/fastBaseComponent';
 
 export * from './providers/IProvider';
 export * from './providers/Providers';
