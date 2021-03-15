@@ -389,6 +389,7 @@ export class MgtFileList extends MgtTemplatedComponent {
     return html`
       <div id="file-list-wrapper" class="file-list-wrapper" onscroll="${this.handleScroll()}">
         <ul id="file-list" class=${fileListClasses}>
+          <li class="show-all" @click=${() => this.handleShowAllFiles()}>Show all files</li>
           ${repeat(
             maxFiles,
             f => f.id,
@@ -399,9 +400,13 @@ export class MgtFileList extends MgtTemplatedComponent {
           )}
           ${this.files.length > this.showMax ? expandedFilesTemplate : null}
         </ul>
-
-        <div id="file-list-overflow" class="file-list-overflow"></div>
+        ${this.renderOnScroll
+          ? html`
+              <div id="file-list-overflow" class="file-list-overflow"></div>
+            `
+          : null}
       </div>
+      <iframe name="picker" id="frame" class="frame"></iframe>
     `;
   }
 
@@ -627,18 +632,131 @@ export class MgtFileList extends MgtTemplatedComponent {
    * Handle load more files on scrolling at the bottom of the list
    */
   private handleScroll() {
-    const scrollable = this.shadowRoot.getElementById('file-list');
-    const overflow = this.shadowRoot.getElementById('file-list-overflow');
+    const scrollable = this.renderRoot.querySelector('.file-list');
+    const overflow = this.renderRoot.querySelector('.file-list-overflow');
 
     if (scrollable) {
       scrollable.addEventListener(
         'scroll',
         debounce(() => {
-          scrollable.scrollTop === scrollable.scrollHeight - scrollable.offsetHeight
+          scrollable.scrollTop === scrollable.scrollHeight - scrollable.clientHeight
             ? overflow.classList.add('fadeout')
             : overflow.classList.remove('fadeout');
         }, 10)
       );
     }
+  }
+
+  private handleShowAllFiles() {
+    const pickerUrlBase = 'https://microsoft.sharepoint-df.com/teams/odsp';
+    const hostPicker = this.renderRoot.querySelector('.show-all');
+    const frame = this.renderRoot.querySelector('.frame');
+
+    hostPicker.addEventListener('click', function() {
+      const id = '' + Math.random().toFixed(6);
+
+      const pickerOptions = {
+        sdk: 'v8.0',
+        messaging: {
+          origin: location.origin,
+          channelId: id
+        }
+      };
+
+      const pickerPageUrl = `${pickerUrlBase}/_layouts/15/FilePicker.aspx`;
+      const url = `${pickerPageUrl}?filePicker=${JSON.stringify(pickerOptions)}`;
+      const pickerOrigin = new URL(pickerPageUrl).origin;
+      let port;
+
+      function messageListener(event) {
+        var message = event.data;
+        console.log(JSON.stringify(message));
+
+        if (message.type === 'command') {
+          port.postMessage({
+            type: 'acknowledge',
+            id: message.id
+          });
+
+          var command = message.data;
+
+          if (command.command === 'close') {
+            port.removeEventListener('message', messageListener);
+
+            frame['src'] = '';
+          } else if (command.command === 'pick') {
+            port.removeEventListener('message', messageListener);
+
+            frame['src'] = '';
+          } else {
+            port.postMessage({
+              type: 'result',
+              id: message.id,
+              data: {
+                result: 'error',
+                error: {
+                  code: 'unsupportedCommand'
+                }
+              }
+            });
+          }
+        } else if (message.type === 'notification') {
+        }
+      }
+
+      var intervalId;
+
+      function initialListener(event) {
+        if (event.origin === pickerOrigin && event.source === frame['contentWindow']) {
+          var message = event.data;
+          console.log(JSON.stringify(message));
+
+          if (message.type === 'initialize' && message.channelId === id) {
+            if (intervalId) {
+              clearInterval(intervalId);
+              intervalId = undefined;
+            }
+
+            port = event.ports[0];
+
+            port.addEventListener('message', messageListener);
+            port.start();
+
+            window.removeEventListener('message', initialListener);
+
+            port.postMessage({
+              type: 'activate'
+            });
+          }
+        }
+      }
+
+      intervalId = setInterval(function() {
+        var identifyParentMessage = {
+          type: 'identify-parent',
+          channelId: id
+        };
+
+        frame['contentWindow'].postMessage(identifyParentMessage, pickerOrigin);
+      }, 100);
+
+      window.addEventListener('message', initialListener);
+
+      var form = frame['contentWindow'].document.createElement('form');
+      form.setAttribute('method', 'POST');
+      form.setAttribute('action', url);
+
+      // if (oauthToken.value) {
+      //   var oauthTokenInput = frame['contentWindow'].document.createElement('input');
+      //   oauthTokenInput.setAttribute('type', 'hidden');
+      //   oauthTokenInput.setAttribute('name', 'access_token');
+      //   oauthTokenInput.setAttribute('value', oauthToken.value);
+      //   form.appendChild(oauthTokenInput);
+      // }
+
+      frame['contentWindow'].document.body.appendChild(form);
+
+      form.submit();
+    });
   }
 }

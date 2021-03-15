@@ -40,7 +40,8 @@ mgt-file-item .file-list-wrapper {
     padding: 0;
     flex-direction: column;
     margin: 0;
-    height: $max-height;
+    height: 100%;
+    max-height: $max-height;
 
     &.scrollable {
       overflow: scroll;

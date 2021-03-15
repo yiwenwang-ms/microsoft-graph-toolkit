@@ -12,32 +12,33 @@
 :host {
   font-family: $font-family;
   font-size: $font-size;
-
-  .button {
-    border-radius: 2px;
-    background-color: #005393;
-    color: #ffffff;
-    cursor: pointer;
-    display: flex;
-    flex-direction: row;
-    width: 100px;
-    padding: 6px;
-
-    .button__text {
-      padding: 6px;
-      white-space: nowrap;
-      overflow: hidden;
-    }
-
-    .button__icon {
+  .flyout {
+    .button {
+      border-radius: 2px;
+      background-color: #005393;
+      color: #ffffff;
+      cursor: pointer;
       display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-  }
+      flex-direction: row;
+      width: 100px;
+      padding: 6px;
 
-  .fly mgt-file-list {
-    --file-list-width: 350px;
-    --file-list-max-height: 425px;
+      .button__text {
+        padding: 6px;
+        white-space: nowrap;
+        overflow: hidden;
+      }
+
+      .button__icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+    }
+
+    mgt-file-list {
+      --file-list-width: 350px;
+      --file-list-max-height: 425px;
+    }
   }
 }
