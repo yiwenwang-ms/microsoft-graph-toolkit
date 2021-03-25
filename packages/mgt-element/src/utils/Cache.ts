@@ -346,3 +346,7 @@ export class CacheStore<T extends CacheItem> {
     });
   }
 }
+
+//Notes : Get access token
+//DEcode using jwt-decoder
+//Use UPN (user principal name)/ hash it and append it to store name
