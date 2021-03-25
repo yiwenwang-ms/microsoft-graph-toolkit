@@ -118,12 +118,13 @@ export class CacheService {
    * @memberof CacheService
    */
   public static getCache<T extends CacheItem>(schema: CacheSchema, storeName: string): CacheStore<T> {
+    storeName += Providers.globalProvider.getActiveAccountUserId();
     const key = `${schema.name}/${storeName}`;
 
     if (!this.isInitialized) {
       this.init();
     }
-
+    console.log('getCache reached', storeName, this.cacheStore);
     if (!this.cacheStore.has(storeName)) {
       this.cacheStore.set(key, new CacheStore<T>(schema, storeName));
     }
@@ -193,6 +194,12 @@ export class CacheService {
     let previousState: ProviderState;
     if (Providers.globalProvider) {
       previousState = Providers.globalProvider.state;
+      if (Providers.globalProvider.switchAccount) {
+        //option 1
+        // Providers.globalProvider.onActiveAccountChanged(() => {
+        //   this.clearCaches();
+        // });
+      }
     }
 
     Providers.onProviderUpdated(() => {
@@ -263,10 +270,10 @@ export class CacheStore<T extends CacheItem> {
   private store: string;
 
   public constructor(schema: CacheSchema, store: string) {
-    if (!(store in schema.stores)) {
-      throw Error('"store" must be defined in the "schema"');
-    }
-
+    // if (!(store in schema.stores)) {
+    //   throw Error('"store" must be defined in the "schema"');
+    // }
+    console.log('Inside CacheStore constructor', store);
     this.schema = schema;
     this.store = store;
   }
@@ -282,8 +289,10 @@ export class CacheStore<T extends CacheItem> {
     if (!window.indexedDB) {
       return null;
     }
+    const db = await this.getDb();
 
-    return (await this.getDb()).get(this.store, key);
+    console.log('Inside getValue', this.store, db);
+    return db.get(this.store, key);
   }
 
   /**
@@ -298,7 +307,7 @@ export class CacheStore<T extends CacheItem> {
     if (!window.indexedDB) {
       return;
     }
-
+    console.log('Inside putValue', this.store);
     await (await this.getDb()).put(this.store, { ...item, timeCached: Date.now() }, key);
   }
 
@@ -326,10 +335,12 @@ export class CacheStore<T extends CacheItem> {
   private getDb() {
     return openDB(this.getDBName(), this.schema.version, {
       upgrade: (db, oldVersion, newVersion, transaction) => {
+        console.log('Inside upgrade');
         for (const storeName in this.schema.stores) {
-          if (this.schema.stores.hasOwnProperty(storeName)) {
-            db.createObjectStore(storeName);
-          }
+          console.log('storename', storeName);
+          // if (this.schema.stores.hasOwnProperty(storeName)) {
+          db.createObjectStore(storeName + Providers.globalProvider.getActiveAccountUserId());
+          // }
         }
       }
     });

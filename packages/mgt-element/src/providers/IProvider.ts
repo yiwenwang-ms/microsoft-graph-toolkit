@@ -29,6 +29,8 @@ export abstract class IProvider implements AuthenticationProvider {
   private _state: ProviderState;
   private _loginChangedDispatcher = new EventDispatcher<LoginChangedEvent>();
   private _activeAccountChangedDispatcher = new EventDispatcher<ActiveAccountChanged>();
+  //TODO: Add a boolean to support /not support multi account functionality
+
   /**
    * returns state of Provider
    *
@@ -99,6 +101,8 @@ export abstract class IProvider implements AuthenticationProvider {
    * @memberof IProvider
    */
   public getAllAccounts?(): any[];
+
+  public getActiveAccountUserId?(): string;
 
   /**
    * Only in Msal2Provider, this can be called to switched between two signed in accounts

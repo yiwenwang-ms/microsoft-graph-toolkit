@@ -123,7 +123,7 @@ export class Msal2Provider extends IProvider {
       this.ms_config.system.iframeHashTimeout = msalConfig.system.iframeHashTimeout || 10000;
       this._loginType = typeof config.loginType !== 'undefined' ? config.loginType : LoginType.Redirect;
       this._loginHint = typeof config.loginHint !== 'undefined' ? config.loginHint : null;
-      this._sid = typeof config.sid !== 'undefined' ? config.sid : null;
+      //this._sid = typeof config.sid !== 'undefined' ? config.sid : null;
       this._domainHint = typeof config.domain_hint !== 'undefined' ? config.domain_hint : null;
       this.scopes = typeof config.scopes !== 'undefined' ? config.scopes : ['user.read'];
       this._publicClientApplication = new PublicClientApplication(this.ms_config);
@@ -190,6 +190,7 @@ export class Msal2Provider extends IProvider {
       this.fireActiveAccountChanged();
     } else {
       const loginRedirectRequest: RedirectRequest = { ...loginRequest };
+      console.log('Login request', loginRedirectRequest);
       this._publicClientApplication.loginRedirect(loginRedirectRequest);
     }
   }
@@ -200,6 +201,11 @@ export class Msal2Provider extends IProvider {
       usernames.push({ username: account.username, id: account.homeAccountId });
     });
     return usernames;
+  }
+
+  public getActiveAccountUserId() {
+    //Call this getCachingId() or something, create a combination of user id + tenant id + domain?
+    return this._publicClientApplication.getActiveAccount().homeAccountId;
   }
 
   public switchAccount(user: any) {
