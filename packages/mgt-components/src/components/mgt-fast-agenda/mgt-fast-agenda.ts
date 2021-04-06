@@ -6,7 +6,13 @@
  */
 
 import * as MicrosoftGraph from '@microsoft/microsoft-graph-types';
-import { Providers, ProviderState, MgtFastBaseComponent, prepScopes } from '@microsoft/mgt-element';
+import {
+  Providers,
+  ProviderState,
+  MgtFastBaseComponent,
+  prepScopes,
+  MgtFastTemplatedComponent
+} from '@microsoft/mgt-element';
 import { customElement, attr, observable, html } from '@microsoft/fast-element';
 
 import { getDayOfWeekString, getMonthString } from '../../utils/Utils';
@@ -48,7 +54,7 @@ import '../../styles/style-helper';
   template,
   styles
 })
-export class MgtFastAgenda extends MgtFastBaseComponent {
+export class MgtFastAgenda extends MgtFastTemplatedComponent {
   /**
    * Array of styles to apply to the element. The styles should be defined
    * using the `css` tag function.
@@ -64,7 +70,7 @@ export class MgtFastAgenda extends MgtFastBaseComponent {
   @attr({ attribute: 'date' })
   public date: string;
   private dateChanged() {
-    this.reloadState();
+    this.reload();
   }
 
   /**
@@ -74,7 +80,7 @@ export class MgtFastAgenda extends MgtFastBaseComponent {
   @attr({ attribute: 'group-id' })
   public groupId: string;
   private groupIdChanged() {
-    this.reloadState();
+    this.reload();
   }
 
   /**
@@ -84,7 +90,7 @@ export class MgtFastAgenda extends MgtFastBaseComponent {
   @attr({ attribute: 'days' })
   public days: number = 3;
   private daysChanged() {
-    this.reloadState();
+    this.reload();
   }
 
   /**
@@ -94,7 +100,7 @@ export class MgtFastAgenda extends MgtFastBaseComponent {
   @attr({ attribute: 'event-query' })
   public eventQuery: string;
   private eventQueryChanged() {
-    this.reloadState();
+    this.reload();
   }
 
   /**
@@ -127,7 +133,7 @@ export class MgtFastAgenda extends MgtFastBaseComponent {
   @attr({ attribute: 'preferred-timezone' })
   public preferredTimezone: string;
   private preferredTimezoneChanged() {
-    this.reloadState();
+    this.reload();
   }
 
   /**
@@ -319,7 +325,8 @@ export class MgtFastAgenda extends MgtFastBaseComponent {
    * @memberof MgtAgenda
    */
   public async reload() {
-    this.events = await this.loadEvents();
+    this.clearState();
+    this.requestStateUpdate(true);
   }
 
   /**
@@ -348,11 +355,6 @@ export class MgtFastAgenda extends MgtFastBaseComponent {
     if (events && events.length > 0) {
       this.events = events;
     }
-  }
-
-  private async reloadState() {
-    this.events = null;
-    this.requestStateUpdate(true);
   }
 
   private onResize() {

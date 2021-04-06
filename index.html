@@ -31,7 +31,13 @@
 
     <mgt-mock-provider></mgt-mock-provider>
 
-    <mgt-fast-agenda></mgt-fast-agenda>
+    <mgt-fast-agenda>
+      <template data-type="event">
+        <div>
+          {{event.subject}}
+        </div>
+      </template>
+    </mgt-fast-agenda>
 
     <script>
       document.querySelector('mgt-fast-agenda').addEventListener('eventClick', e => {

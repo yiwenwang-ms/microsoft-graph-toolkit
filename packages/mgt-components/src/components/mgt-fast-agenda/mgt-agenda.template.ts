@@ -4,33 +4,18 @@ import { MgtFastAgenda } from './mgt-fast-agenda';
 import './mgt-agenda-event/mgt-agenda-event';
 
 export const template = html<MgtFastAgenda>`
-  ${when(
-    x => !x.events && x.isLoadingState,
-    html`
-      <div class="event">
-        <div class="event-time-container">
-          <div class="event-time-loading loading-element"></div>
-        </div>
-        <div class="event-details-container">
-          <div class="event-subject-loading loading-element"></div>
-          <div class="event-location-container">
-            <div class="event-location-icon-loading loading-element"></div>
-            <div class="event-location-loading loading-element"></div>
-          </div>
-          <div class="event-location-container">
-            <div class="event-attendee-loading loading-element"></div>
-            <div class="event-attendee-loading loading-element"></div>
-            <div class="event-attendee-loading loading-element"></div>
-          </div>
-        </div>
-      </div>
-    `
-  )}
+  ${when(x => !x.events && x.isLoadingState, x => x.getTemplate('loading', null, 'loading', null))}
   ${when(
     x => (!x.events || x.events.length === 0) && !x.isLoadingState,
-    html`
-      <div>TODO: no data</div>
-    `
+    x =>
+      x.getTemplate(
+        'no-data',
+        null,
+        'no-data',
+        html`
+          <div>TODO: no data</div>
+        `
+      )
   )}
   ${when(
     x => x.events,
@@ -41,7 +26,15 @@ export const template = html<MgtFastAgenda>`
             x => x.events,
             html<microsoftgraph.Event>`
               <div @click=${(x, c) => c.parent.eventClicked(x)}>
-                <mgt-fast-agenda-event :event=${x => x}></mgt-fast-agenda-event>
+                ${(x, c) =>
+                  c.parent.getTemplate(
+                    'event',
+                    { event: x },
+                    x.id,
+                    html`
+                      <mgt-fast-agenda-event :event=${x => x}></mgt-fast-agenda-event>
+                    `
+                  )}
               </div>
             `
           )}
