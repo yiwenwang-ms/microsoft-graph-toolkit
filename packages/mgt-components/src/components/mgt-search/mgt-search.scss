@@ -7,15 +7,11 @@
 
 @import '../../../../../node_modules/office-ui-fabric-core/dist/sass/References';
 @import '../../styles/shared-styles.scss';
-@import './mgt-search-suggestion.theme.scss';
+@import './mgt-search.theme.scss';
 
-$suggestion-item-background-color--hover: set-var(
-  suggestion__background-color--hover,
-  $theme-default,
-  $search-suggestion
-);
-$suggestion-list-background-color: set-var(suggestion__background-color, $theme-default, $search-suggestion);
-$suggestion-list-text-color: set-var(suggestion__entity-text-color, $theme-default, $search-suggestion);
+$suggestion-item-background-color--hover: set-var(suggestion__background-color--hover, $theme-default, $search);
+$suggestion-list-background-color: set-var(suggestion__background-color, $theme-default, $search);
+$suggestion-list-query-color: set-var(suggestion__entity-text-color, $theme-default, $search);
 $font-family: var(--font-family, var(--default-font-family));
 
 // Main
@@ -29,11 +25,11 @@ $font-family: var(--font-family, var(--default-font-family));
 }
 
 :host .root,
-mgt-search-suggestion .root {
+mgt-search .root {
   display: block;
 }
 
-.search-suggestion {
+.search {
   background-color: $suggestion-list-background-color;
   @include input__border($theme-default);
   &:hover {
@@ -107,7 +103,7 @@ mgt-search-suggestion .root {
       padding-top: 5px;
     }
 
-    .mgt-search-suggestion-person-default {
+    .mgt-suggestion-person-default {
       display: block;
       padding-top: 10px;
       padding-bottom: 10px;
@@ -118,6 +114,7 @@ mgt-search-suggestion .root {
       padding-left: 10px;
       clear: both;
       padding-right: 30px;
+      list-style: none;
       background: $suggestion-list-background-color;
       --file-background-color: $suggestion-list-background-color;
       &:hover {
@@ -136,7 +133,7 @@ mgt-search-suggestion .root {
       padding-top: 20px;
     }
 
-    .suggestion-text-container {
+    .suggestion-query-container {
       min-height: 15px;
       padding-top: 5px;
       padding-bottom: 5px;
@@ -146,10 +143,10 @@ mgt-search-suggestion .root {
       min-width: 300px;
     }
 
-    .suggestion-text-description {
+    .suggestion-query-description {
       line-height: 14px;
       font-size: 12px;
-      color: $suggestion-list-text-color;
+      color: $suggestion-list-query-color;
       white-space: nowrap;
       text-overflow: ellipsis;
       overflow: hidden;
@@ -163,7 +160,7 @@ mgt-search-suggestion .root {
       padding-left: 10px;
       padding-top: 5px;
       padding-bottom: 5px;
-      color: $suggestion-list-text-color;
+      color: $suggestion-list-query-color;
       height: 28px;
     }
 

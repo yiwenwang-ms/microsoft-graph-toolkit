@@ -8,53 +8,52 @@
 import { IGraph, prepScopes, CacheItem, CacheService, CacheStore } from '@microsoft/mgt-element';
 import { schemas } from './cacheStores';
 
+export interface SuggestionItem extends CacheItem {
+  entity: string;
+  referenceId: string;
+}
+
 /**
  * Object to be stored in cache representing individual people
  */
-export interface SuggestionPeople extends CacheItem {
+export interface SuggestionPeople extends SuggestionItem {
   /**
    * json representing a person stored as string
    */
-  entity: string;
   displayName?: string;
   personImage?: string;
   givenName?: string;
   surname?: string;
   jobTitle?: string;
-  referenceId: string;
   imAddress?: string;
 }
 
 /**
  * Object to be stored in cache representing individual people
  */
-export interface SuggestionFile extends CacheItem {
+export interface SuggestionFile extends SuggestionItem {
   /**
    * json representing a person stored as string
    */
-  entity: string;
   name: string;
   addtionalInformation?: string;
   DateModified?: string;
   FileExtension?: string;
   FileType?: string;
-  Text?: string;
+  Query?: string;
   FileSize?: number;
   AccessUrl?: string;
-  referenceId?: string;
   id?: string;
 }
 
 /**
  * Object to be stored in cache representing individual people
  */
-export interface SuggestionText extends CacheItem {
+export interface SuggestionQuery extends SuggestionItem {
   /**
    * json representing a person stored as string
    */
-  entity: string;
-  text: string;
-  referenceId: string;
+  query: string;
 }
 
 /**
@@ -65,18 +64,19 @@ export interface Suggestions extends CacheItem {
    * json representing a person stored as string
    */
   fileSuggestions: SuggestionFile[];
-  textSuggestions: SuggestionText[];
+  querySuggestions: SuggestionQuery[];
   peopleSuggestions: SuggestionPeople[];
+  otherSuggestion1?: any[];
+  otherSuggestion2?: any[];
 }
 
-export interface SuggestionQueryConfig extends CacheItem {
-  maxFileCount: number;
-  maxPeopleCount: number;
-  maxTextCount: number;
+export interface SuggestionEntityConfig {
+  maxCount: number;
+}
+
+export interface SuggestionConfig {
+  configMap: Map<String, SuggestionEntityConfig>;
   queryString: string;
-  queryEntities: string;
-  cvid?: string;
-  textDecorations?: string;
 }
 
 /**
@@ -102,13 +102,7 @@ const getIsPeopleCacheEnabled = (): boolean =>
 const getSuggestionInvalidationTime = (): number =>
   CacheService.config.suggestions.invalidationPeriod || CacheService.config.defaultInvalidationPeriod;
 
-/**
- * async promise to the Graph for Suggestions, by default, it will request the most frequent contacts for the signed in user.
- *
- * @returns {(Promise<Person[]>)}
- * @memberof Graph
- */
-export async function getSuggestions(graph: IGraph, queryConfig: SuggestionQueryConfig): Promise<Suggestions> {
+const getMockData = (): Suggestions => {
   var mockFileSuggestions: SuggestionFile[] = [
     {
       entity: 'File',
@@ -158,31 +152,31 @@ export async function getSuggestions(graph: IGraph, queryConfig: SuggestionQuery
     }
   ];
 
-  var mockTextSuggestions: SuggestionText[] = [
+  var mockQuerySuggestions: SuggestionQuery[] = [
     {
       entity: 'Text',
-      text: 'Text A',
+      query: 'Query A',
       referenceId: '36d3928a-7ccb-4359-9c17-fd9be6255364.10000.5'
     },
     {
       entity: 'Text',
-      text:
+      query:
         'any one of the vector terms added to form a vector sum or resultant / a coordinate of a vectoreither member of an ordered pair of numbers',
       referenceId: '36d3928a-7ccb-4359-9c17-fd9be6255364.10000.6'
     },
     {
       entity: 'Text',
-      text: 'Text C',
+      query: 'Query C',
       referenceId: '36d3928a-7ccb-4359-9c17-fd9be6255364.10000.7'
     },
     {
       entity: 'Text',
-      text: 'Text D',
+      query: 'Query D',
       referenceId: '36d3928a-7ccb-4359-9c17-fd9be6255364.10000.8'
     },
     {
       entity: 'Text',
-      text: 'Text E',
+      query: 'Query E',
       referenceId: '36d3928a-7ccb-4359-9c17-fd9be6255364.10000.9'
     }
   ];
@@ -226,40 +220,88 @@ export async function getSuggestions(graph: IGraph, queryConfig: SuggestionQuery
     }
   ];
 
+  var otherSuggestion1 = [
+    {
+      entity: 'Sample1',
+      referenceId: '1111111111111110'
+    },
+    {
+      entity: 'Sample1',
+      referenceId: '1111111111111111'
+    },
+    {
+      entity: 'Sample1',
+      referenceId: '1111111111111112'
+    }
+  ];
+
+  var otherSuggestion2 = [
+    {
+      entity: 'Sample2',
+      referenceId: '1111111111111120'
+    },
+    {
+      entity: 'Sample2',
+      referenceId: '1111111111111121'
+    },
+    {
+      entity: 'Sample2',
+      referenceId: '1111111111111122'
+    }
+  ];
+
   var mockSuggestions: Suggestions = {
     fileSuggestions: mockFileSuggestions,
-    textSuggestions: mockTextSuggestions,
-    peopleSuggestions: mockPeopleSuggestions
+    querySuggestions: mockQuerySuggestions,
+    peopleSuggestions: mockPeopleSuggestions,
+    otherSuggestion1: otherSuggestion1,
+    otherSuggestion2: otherSuggestion2
   };
-  if (queryConfig.queryEntities.toLowerCase().indexOf('file') != -1) {
-    mockSuggestions.fileSuggestions = mockSuggestions.fileSuggestions
-      .filter(file => {
-        return file.name.toLowerCase().startsWith(queryConfig.queryString.toLowerCase());
-      })
-      .slice(0, queryConfig.maxFileCount);
-  } else {
-    mockSuggestions.fileSuggestions = [];
-  }
-
-  if (queryConfig.queryEntities.toLowerCase().indexOf('text') != -1) {
-    mockSuggestions.textSuggestions = mockSuggestions.textSuggestions
-      .filter(text => {
-        return text.text.toLowerCase().startsWith(queryConfig.queryString.toLowerCase());
-      })
-      .slice(0, queryConfig.maxTextCount);
-  } else {
-    mockSuggestions.textSuggestions = [];
-  }
-
-  if (queryConfig.queryEntities.toLowerCase().indexOf('people') != -1) {
-    mockSuggestions.peopleSuggestions = mockSuggestions.peopleSuggestions
-      .filter(person => {
-        return person.displayName.toLowerCase().startsWith(queryConfig.queryString.toLowerCase());
-      })
-      .slice(0, queryConfig.maxPeopleCount);
-  } else {
-    mockSuggestions.peopleSuggestions = [];
-  }
-
   return mockSuggestions;
+};
+
+/**
+ * async promise to the Graph for Suggestions, by default, it will request the most frequent contacts for the signed in user.
+ *
+ * @returns {(Promise<Person[]>)}
+ * @memberof Graph
+ */
+export async function getSuggestions(graph: IGraph, queryConfig: SuggestionConfig): Promise<Map<string, any[]>> {
+  // mock action
+  var mockSuggestions = getMockData();
+  for (var key in mockSuggestions) {
+    var suggestion = mockSuggestions[key];
+    var entityType = suggestion[0].entity.toLowerCase();
+    var config = queryConfig.configMap.get(entityType);
+    if (config != null && config != undefined) {
+      var maxCount = config.maxCount;
+      mockSuggestions[key] = mockSuggestions[key]
+        .filter(item => {
+          if (item.entity == 'Text') {
+            return item.query.toLowerCase().startsWith(queryConfig.queryString.toLowerCase());
+          }
+
+          if (item.entity == 'People') {
+            return item.displayName.toLowerCase().startsWith(queryConfig.queryString.toLowerCase());
+          }
+
+          if (item.entity == 'File') {
+            return item.name.toLowerCase().startsWith(queryConfig.queryString.toLowerCase());
+          }
+
+          return true;
+        })
+        .slice(0, maxCount);
+    } else {
+      mockSuggestions[key] = [];
+    }
+  }
+
+  var resultMap = new Map();
+  for (var key in mockSuggestions) {
+    if (mockSuggestions[key].length > 0) {
+      resultMap.set(mockSuggestions[key][0].entity.toLowerCase(), mockSuggestions[key]);
+    }
+  }
+  return resultMap;
 }

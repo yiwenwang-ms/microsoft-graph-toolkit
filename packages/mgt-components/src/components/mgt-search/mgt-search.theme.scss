@@ -7,7 +7,7 @@
 
 @import '../../styles/shared-sass-variables.scss';
 
-$search-suggestion: (
+$search: (
   suggestion__background-color--hover: (
     _var: --suggestion-item-background-color--hover,
     light: #f9f7f9,
@@ -19,10 +19,10 @@ $search-suggestion: (
     dark: black
   ),
   suggestion__entity-text-color: (
-    _var: --suggestion-list-text-color,
+    _var: --suggestion-list-query-color,
     light: black,
     dark: white
   )
 );
 
-@include create-themes($search-suggestion);
+@include create-themes($search);

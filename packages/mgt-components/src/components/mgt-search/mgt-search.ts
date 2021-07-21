@@ -15,7 +15,7 @@ import '../../styles/style-helper';
 import '../sub-components/mgt-spinner/mgt-spinner';
 import { debounce } from '../../utils/Utils';
 import { MgtFlyout } from '../sub-components/mgt-flyout/mgt-flyout';
-import { styles } from './mgt-search-suggestion-css';
+import { styles } from './mgt-search-css';
 
 import { strings } from './strings';
 import {
@@ -23,8 +23,10 @@ import {
   SuggestionFile,
   SuggestionPeople,
   Suggestions,
-  SuggestionText
-} from '../../graph/graph.suggestions';
+  SuggestionQuery,
+  SuggestionConfig,
+  SuggestionEntityConfig
+} from '../../graph/graph.search';
 import { IDynamicPerson } from '../../graph/types';
 
 /**
@@ -42,13 +44,15 @@ interface IFocusable {
  * Web component used to search for people from the Microsoft Graph
  *
  * @export
+ * @fires suggestionClick - Fired when selection changes
+ * @fires enterPress - Fired when selection changes
  * @cssprop --suggestion-item-background-color--hover - {Color} background color for an hover item
  * @cssprop --suggestion-list-background-color - {Color} background color
- * @cssprop --suggestion-list-text-color - {Color} Text Suggestion font color
+ * @cssprop --suggestion-list-query-color - {Color} Query Suggestion font color
  *
  */
-@customElement('mgt-search-suggestion')
-export class MgtSearchSuggestion extends MgtTemplatedComponent {
+@customElement('mgt-search')
+export class MgtSearch extends MgtTemplatedComponent {
   /**
    * Array of styles to apply to the element. The styles should be defined
    * user the `css` tag function.
@@ -96,22 +100,16 @@ export class MgtSearchSuggestion extends MgtTemplatedComponent {
     this.input.value = _value;
   }
 
-  private _testValue = 'good';
-
   @property({ attribute: 'suggestion-value' })
   public get suggestionValue() {
     return this.getFocusItemValue();
   }
 
-  public testExpose() {
-    return 'expose';
-  }
-
   /**
-   * Placeholder text.
+   * Placeholder query.
    *
    * @type {string}
-   * @memberof MgtSearchSuggestion
+   * @memberof MgtSearch
    */
   @property({
     attribute: 'placeholder',
@@ -123,7 +121,7 @@ export class MgtSearchSuggestion extends MgtTemplatedComponent {
    * Determines whether component should be disabled or not
    *
    * @type {boolean}
-   * @memberof MgtSearchSuggestion
+   * @memberof MgtSearch
    */
   @property({
     attribute: 'disabled',
@@ -160,21 +158,21 @@ export class MgtSearchSuggestion extends MgtTemplatedComponent {
   }
 
   @property({
-    attribute: 'text-suggestion-value',
+    attribute: 'query-suggestion-value',
     type: String
   })
-  private _textSuggestionValue: string;
+  private _querySuggestionValue: string;
 
-  public set textSuggestionValue(textSuggestionValue: string) {
-    this._textSuggestionValue = textSuggestionValue;
+  public set querySuggestionValue(querySuggestionValue: string) {
+    this._querySuggestionValue = querySuggestionValue;
   }
 
-  public get textSuggestionValue() {
-    return this._textSuggestionValue;
+  public get querySuggestionValue() {
+    return this._querySuggestionValue;
   }
 
   @property({
-    attribute: 'max-file-suggestion-count',
+    attribute: 'max-file-suggestions',
     type: Number
   })
   private _maxFileSuggestionCount: number = 3;
@@ -188,21 +186,21 @@ export class MgtSearchSuggestion extends MgtTemplatedComponent {
   }
 
   @property({
-    attribute: 'max-text-suggestion-count',
+    attribute: 'max-query-suggestions',
     type: Number
   })
-  private _maxTextSuggestionCount: number = 3;
+  private _maxQuerySuggestionCount: number = 3;
 
-  public set maxTextSuggestionCount(maxTextSuggestionCount: number) {
-    this._maxTextSuggestionCount = maxTextSuggestionCount;
+  public set maxQuerySuggestionCount(maxQuerySuggestionCount: number) {
+    this._maxQuerySuggestionCount = maxQuerySuggestionCount;
   }
 
-  public get maxTextSuggestionCount() {
-    return this._maxTextSuggestionCount;
+  public get maxQuerySuggestionCount() {
+    return this._maxQuerySuggestionCount;
   }
 
   @property({
-    attribute: 'max-people-suggestion-count',
+    attribute: 'max-people-suggestions',
     type: Number
   })
   private _maxPeopleSuggestionCount: number = 3;
@@ -216,13 +214,13 @@ export class MgtSearchSuggestion extends MgtTemplatedComponent {
   }
 
   @property({
-    attribute: 'selected-entity-types',
+    attribute: 'entity-types',
     type: String
   })
-  private _selectedEntityTypes: string = 'file, text, people';
+  private _entityTypes: string = 'file, query, people';
 
-  public set selectedEntityTypes(selectedEntityTypes: string) {
-    this._selectedEntityTypes = selectedEntityTypes;
+  public set entityTypes(entityTypes: string) {
+    this._entityTypes = entityTypes;
   }
 
   @property({
@@ -241,24 +239,24 @@ export class MgtSearchSuggestion extends MgtTemplatedComponent {
   })
   private _textDecorations: string = 'd8e48cff-9cac-40c9-0b5c-e6d24488f781';
 
+  private _suggestionConfig: SuggestionConfig;
+
+  private _suggestionEntityOrder = [];
+
   public set textDecorations(textDecorations: string) {
     this._textDecorations = textDecorations;
   }
 
-  public get selectedEntityTypes() {
-    return this._selectedEntityTypes;
+  public get entityTypes() {
+    return this._entityTypes;
   }
-
-  public onEnterKeyPressCallback: (originalInput, suggestionValue) => {};
-
-  public onClickCallback: (suggestionValue) => {};
 
   /**
    * User input in search.
    *
    * @protected
    * @type {string}
-   * @memberof MgtSearchSuggestion
+   * @memberof MgtSearch
    */
   protected userInput: string;
 
@@ -276,11 +274,11 @@ export class MgtSearchSuggestion extends MgtTemplatedComponent {
 
   @internalProperty() private _foundPeopleSuggestion: SuggestionPeople[];
 
-  @internalProperty() private _foundTextSuggestion: SuggestionText[];
+  @internalProperty() private _foundQuerySuggestion: SuggestionQuery[];
 
   @internalProperty() private _foundFileSuggestion: SuggestionFile[];
 
-  @internalProperty() private _foundSuggestion: Suggestions;
+  @internalProperty() private _foundSuggestion: Map<string, any[]>;
 
   @internalProperty() private _suggestionItemsMap: Map<string, any> = new Map();
 
@@ -296,7 +294,7 @@ export class MgtSearchSuggestion extends MgtTemplatedComponent {
    *
    * @static
    * @return {*}  {string[]}
-   * @memberof MgtSearchSuggestion
+   * @memberof MgtSearch
    */
   public static get requiredScopes(): string[] {
     return [
@@ -308,7 +306,7 @@ export class MgtSearchSuggestion extends MgtTemplatedComponent {
    * Focuses the input element when focus is called
    *
    * @param {FocusOptions} [options]
-   * @memberof MgtSearchSuggestion
+   * @memberof MgtSearch
    */
   public focus(options?: FocusOptions) {
     this.gainedFocus();
@@ -323,20 +321,15 @@ export class MgtSearchSuggestion extends MgtTemplatedComponent {
    * Invoked on each update to perform rendering tasks. This method must return a lit-html TemplateResult.
    * Setting properties inside this method will not trigger the element to update.
    * @returns {TemplateResult}
-   * @memberof MgtSearchSuggestion
+   * @memberof MgtSearch
    */
   public render(): TemplateResult {
-    const defaultTemplate = this.renderTemplate('default', { people: this._foundSuggestion });
-    if (defaultTemplate) {
-      return defaultTemplate;
-    }
-
     const inputTemplate = this.renderInput();
     const flyoutTemplate = this.renderFlyout(inputTemplate);
 
     const inputClasses = {
       focused: this._isFocused,
-      'search-suggestion': true,
+      search: true,
       disabled: this.disabled
     };
 
@@ -353,7 +346,7 @@ export class MgtSearchSuggestion extends MgtTemplatedComponent {
    * Clears state of the component
    *
    * @protected
-   * @memberof MgtSearchSuggestion
+   * @memberof MgtSearch
    */
   protected clearState(): void {
     this.userInput = '';
@@ -371,11 +364,11 @@ export class MgtSearchSuggestion extends MgtTemplatedComponent {
   }
 
   /**
-   * Render the input text box.
+   * Render the input query box.
    *
    * @protected
    * @returns {TemplateResult}
-   * @memberof MgtSearchSuggestion
+   * @memberof MgtSearch
    */
   protected renderInput(): TemplateResult {
     const inputClasses = {
@@ -383,16 +376,16 @@ export class MgtSearchSuggestion extends MgtTemplatedComponent {
     };
 
     return (
-      this.renderTemplate('search-suggestion-input', null) ||
+      this.renderTemplate('suggestion-input', null) ||
       html`
       <div class="${classMap(inputClasses)}">
         <input
-          id="search-suggestion-input"
+          id="suggestion-input"
           class="search-box__input"
           type="text"
           placeholder="Search sth..."
-          label="search-suggestion-input"
-          aria-label="search-suggestion-input"
+          label="suggestion-input"
+          aria-label="suggestion-input"
           role="input"
           @keydown="${this.onUserKeyDown}"
           @keyup="${this.onUserKeyUp}"
@@ -406,64 +399,11 @@ export class MgtSearchSuggestion extends MgtTemplatedComponent {
   }
 
   /**
-   * Render the flyout chrome.
-   *
-   * @protected
-   * @returns {TemplateResult}
-   * @memberof MgtSearchSuggestion
-   */
-  protected renderFlyout(anchor: TemplateResult): TemplateResult {
-    return html`
-      <mgt-flyout light-dismiss class="flyout">
-        ${anchor}
-        <div slot="flyout" class="flyout-root">
-          ${this.renderFlyoutContent()}
-        </div>
-      </mgt-flyout>
-    `;
-  }
-
-  /**
-   * Render the appropriate state in the results flyout.
-   *
-   * @protected
-   * @returns {TemplateResult}
-   * @memberof MgtSearchSuggestion
-   */
-  protected renderFlyoutContent(): TemplateResult {
-    if (this.isLoadingState || this._showLoading) {
-      return this.renderLoading();
-    }
-
-    let fileSuggestions = this._foundFileSuggestion;
-    let textSuggestions = this._foundTextSuggestion;
-    let peopleSuggestions = this._foundPeopleSuggestion;
-
-    if (
-      (!peopleSuggestions || peopleSuggestions.length === 0 || this._maxPeopleSuggestionCount === 0) &&
-      (!textSuggestions || textSuggestions.length === 0 || this._maxTextSuggestionCount === 0) &&
-      (!fileSuggestions || fileSuggestions.length === 0 || this._maxFileSuggestionCount === 0)
-    ) {
-      return this.renderNoData();
-    }
-
-    return html`
-      <div class="suggestion-container">
-        ${this.renderTextSearchResults(textSuggestions)} ${this.renderPeopleSearchResults(peopleSuggestions)}
-        ${this.renderFileSearchResults(fileSuggestions)}
-      </div>
-    `;
-
-    // render text result
-    // render file
-  }
-
-  /**
    * Render the loading state.
    *
    * @protected
    * @returns
-   * @memberof MgtSearchSuggestion
+   * @memberof MgtSearch
    */
   protected renderLoading(): TemplateResult {
     return (
@@ -471,7 +411,7 @@ export class MgtSearchSuggestion extends MgtTemplatedComponent {
       html`
         <div class="message-parent">
           <mgt-spinner></mgt-spinner>
-          <div label="loading-text" aria-label="loading" class="loading-text">
+          <div label="loading-query" aria-label="loading" class="loading-query">
             ${this.strings.loadingMessage}
           </div>
         </div>
@@ -484,7 +424,7 @@ export class MgtSearchSuggestion extends MgtTemplatedComponent {
    *
    * @protected
    * @returns {TemplateResult}
-   * @memberof MgtSearchSuggestion
+   * @memberof MgtSearch
    */
   protected renderNoData(): TemplateResult {
     return (
@@ -492,7 +432,7 @@ export class MgtSearchSuggestion extends MgtTemplatedComponent {
       this.renderTemplate('no-data', null) ||
       html`
         <div class="message-parent">
-          <div label="search-error-text" aria-label="We didn't find any matches." class="search-error-text">
+          <div label="search-error-query" aria-label="We didn't find any matches." class="search-error-query">
             ${this.strings.noResultsFound}
           </div>
         </div>
@@ -510,20 +450,9 @@ export class MgtSearchSuggestion extends MgtTemplatedComponent {
     if (provider && provider.state === ProviderState.SignedIn) {
       const graph = provider.graph.forComponent(this);
       if (this._isFocused) {
-        var SuggestionQueryConfig = {
-          maxFileCount: this._maxFileSuggestionCount,
-          maxPeopleCount: this._maxPeopleSuggestionCount,
-          maxTextCount: this._maxTextSuggestionCount,
-          queryString: input,
-          queryEntities: this._selectedEntityTypes,
-          cvid: this._cvid,
-          textDecorations: this._textDecorations
-        };
-        var suggestions = await getSuggestions(graph, SuggestionQueryConfig);
+        this.setEntityConfig();
+        var suggestions = await getSuggestions(graph, this._suggestionConfig);
         this._foundSuggestion = suggestions;
-        this._foundTextSuggestion = this.filterTextSuggestions(suggestions.textSuggestions);
-        this._foundFileSuggestion = this.filterFileSuggestions(suggestions.fileSuggestions);
-        this._foundPeopleSuggestion = this.filterPeopleSuggestions(suggestions.peopleSuggestions);
       }
       this._showLoading = false;
       this.clearArrowSelection();
@@ -534,7 +463,7 @@ export class MgtSearchSuggestion extends MgtTemplatedComponent {
    * Hide the results flyout.
    *
    * @protected
-   * @memberof MgtSearchSuggestion
+   * @memberof MgtSearch
    */
   protected hideFlyout(): void {
     const flyout = this.flyout;
@@ -547,7 +476,7 @@ export class MgtSearchSuggestion extends MgtTemplatedComponent {
    * Show the results flyout.
    *
    * @protected
-   * @memberof MgtSearchSuggestion
+   * @memberof MgtSearch
    */
   protected showFlyout(): void {
     const flyout = this.flyout;
@@ -607,7 +536,7 @@ export class MgtSearchSuggestion extends MgtTemplatedComponent {
 
   /**
    * Tracks event on user input in search
-   * @param input - input text
+   * @param input - input query
    */
   private handleUserSearch() {
     if (!this._debouncedSearch) {
@@ -633,7 +562,6 @@ export class MgtSearchSuggestion extends MgtTemplatedComponent {
    * @param event - event tracked on user input (keydown)
    */
   private onUserKeyDown(event: KeyboardEvent): void {
-    console.log('Press key:', event.keyCode);
     if (!this.flyout.isOpen) {
       return;
     }
@@ -646,7 +574,12 @@ export class MgtSearchSuggestion extends MgtTemplatedComponent {
     }
     if (event.keyCode === 13) {
       //  and enter (13)
-      this.onEnterKeyPressCallback(this.input.value, this.getFocusItemValue());
+      //this.onEnterKeyPressCallback(this.input.value, this.getFocusItemValue());
+      this.fireCustomEvent('onEnterPress', {
+        originalValue: this.input.value,
+        suggestedValue: this.getFocusItemValue()
+      });
+
       this.hideFlyout();
       (event.target as HTMLInputElement).value = '';
     }
@@ -703,6 +636,50 @@ export class MgtSearchSuggestion extends MgtTemplatedComponent {
     }
   }
 
+  private setEntityConfig() {
+    // alias Map map customer entity name to real entity name in suggestion API
+    var aliasMap = new Map<string, string>();
+    var suggestionConfig: SuggestionConfig = {
+      configMap: new Map<String, SuggestionEntityConfig>(),
+      queryString: this.input.value
+    };
+    var suggestionEntityOrder = [];
+    // allow rename entity type.
+    aliasMap.set('query', 'text');
+    var defaultCount = 3;
+    var defaultSegment = '-';
+    // user input entityTypes should like "query, file-1, people,...other future entity types "
+    //
+    var entityTypes = this._entityTypes.split(',');
+    for (var entityType of entityTypes) {
+      var entityConfig = entityType.split(defaultSegment);
+      //remove spaces and to lower case
+      for (var key in entityConfig) {
+        entityConfig[key] = entityConfig[key].toLowerCase().trim();
+      }
+
+      var maxCount = defaultCount;
+      if (entityConfig.length > 1) {
+        maxCount = parseInt(entityConfig[1]);
+      }
+      var suggestionEntityConfig: SuggestionEntityConfig = {
+        maxCount: maxCount
+      };
+
+      var entityName = aliasMap.has(entityConfig[0]) ? aliasMap.get(entityConfig[0]) : entityConfig[0];
+      suggestionConfig.configMap.set(
+        aliasMap.has(entityConfig[0]) ? aliasMap.get(entityConfig[0]) : entityConfig[0],
+        suggestionEntityConfig
+      );
+
+      suggestionEntityOrder.push(entityName);
+    }
+    // set entity render order
+    this._suggestionConfig = suggestionConfig;
+    // set entity query config
+    this._suggestionEntityOrder = suggestionEntityOrder;
+  }
+
   private getFocusItemValue() {
     const peopleList = this.renderRoot.querySelectorAll('.suggestion-common-container');
     for (let i = 0; i < peopleList.length; i++) {
@@ -713,71 +690,113 @@ export class MgtSearchSuggestion extends MgtTemplatedComponent {
   }
 
   /**
-   * Filters people searched from already selected people
-   * @param people - array of people returned from query to Graph
+   * Render the flyout chrome.
+   *
+   * @protected
+   * @returns {TemplateResult}
+   * @memberof MgtSearch
    */
-  private filterPeopleSuggestions(people: SuggestionPeople[]): SuggestionPeople[] {
-    for (let person of people) {
-      this._suggestionItemsMap.set(person.referenceId, person);
-    }
-    return people;
+  protected renderFlyout(anchor: TemplateResult): TemplateResult {
+    return html`
+        <mgt-flyout light-dismiss class="flyout">
+          ${anchor}
+          <div slot="flyout" class="flyout-root">
+            ${this.renderFlyoutContent()}
+          </div>
+        </mgt-flyout>
+      `;
   }
 
-  private filterFileSuggestions(files: SuggestionFile[]): SuggestionFile[] {
-    for (let file of files) {
-      this._suggestionItemsMap.set(file.referenceId, file);
+  /**
+   * Render the appropriate state in the results flyout.
+   *
+   * @protected
+   * @returns {TemplateResult}
+   * @memberof MgtSearch
+   */
+  protected renderFlyoutContent(): TemplateResult {
+    if (this.isLoadingState || this._showLoading) {
+      return this.renderLoading();
     }
-    return files;
+
+    if (this.isEmptySuggestion()) {
+      return this.renderNoData();
+    }
+
+    return html`
+          ${this.renderFlyoutHeader()}
+          ${repeat(this._suggestionEntityOrder, entityType => {
+            return this.renderEntityRouter(entityType);
+          })}
+          ${this.renderFlyoutFooter()}
+  
+      `;
+
+    // render query result
+    // render file
   }
 
-  private filterTextSuggestions(texts: SuggestionText[]): SuggestionText[] {
-    // check if people need to be updated
-    // ensuring people list is displayed
-    // find ids from selected people
-    for (let text of texts) {
-      this._suggestionItemsMap.set(text.referenceId, text);
+  protected renderFlyoutHeader() {
+    return this.renderTemplate('flyout-header', {}) || html``;
+  }
+
+  protected renderFlyoutFooter() {
+    return this.renderTemplate('flyout-footer', {}) || html``;
+  }
+
+  protected renderEntityRouter(entityType: string) {
+    var data = this._foundSuggestion.get(entityType);
+    if (entityType == 'file') {
+      return this.renderFileSearchResults(data);
     }
-    return texts;
+    if (entityType == 'text') {
+      return this.renderQuerySearchResults(data);
+    }
+    if (entityType == 'people') {
+      return this.renderPeopleSearchResults(data);
+    }
+    return this.renderCustomizedSearchResults(entityType, data);
   }
 
   // render People search result
   protected renderPeopleSearchResults(people?: SuggestionPeople[]) {
-    people = people || this._foundPeopleSuggestion;
-    if (people.length < 1) return html``;
+    if (people == null || people == undefined) return html``;
     const input = this.userInput;
     return html`
-        ${this.renderSuggestionEntityLabelPeople()}
-        ${this.renderSuggestionEntityPeople(people)}
+        ${this.renderPeopleHeader()}
+        ${this.renderPeople(people)}
     `;
   }
 
   // render File search result
   protected renderFileSearchResults(files?: SuggestionFile[]) {
-    files = files || this._foundFileSuggestion;
+    if (files == null || files == undefined) return html``;
     if (files.length < 1) return html``;
     const input = this.userInput;
     return html`
-        ${this.renderSuggestionEntityLabelFile()}
-        ${this.renderSuggestionEntityFile(files)}
+        ${this.renderFileHeader()}
+        ${this.renderFiles(files)}
     `;
   }
 
-  // render Text search result
-  protected renderTextSearchResults(texts?: SuggestionText[]) {
-    texts = texts || this._foundTextSuggestion;
-    if (texts.length < 1) return html``;
+  // render Query search result
+  protected renderQuerySearchResults(querys?: SuggestionQuery[]) {
+    if (querys == null || querys == undefined) return html``;
+    if (querys.length < 1) return html``;
     const input = this.userInput;
     return html`
-        ${this.renderSuggestionEntityLabelText()}
-        ${this.renderSuggestionEntityText(texts)}
+        ${this.renderQueryHeader()}
+        <div>
+        ${this.renderQuerys(querys)}
+        </div>
+
     `;
   }
 
-  // Template Rendering
-
-  protected renderSuggestionEntityLabelPeople() {
+  // Rendering entity header
+  protected renderPeopleHeader() {
     return (
-      this.renderTemplate('search-suggestion-label-people', null) ||
+      this.renderTemplate('suggestion-people-header', null) ||
       html`
       <div class="suggestion-entity-label">
         People
@@ -786,9 +805,9 @@ export class MgtSearchSuggestion extends MgtTemplatedComponent {
     );
   }
 
-  protected renderSuggestionEntityLabelText() {
+  protected renderQueryHeader() {
     return (
-      this.renderTemplate('search-suggestion-label-text', {}) ||
+      this.renderTemplate('suggestion-query-header', {}) ||
       html`
       <div class="suggestion-entity-label">
         Suggested Searches
@@ -797,9 +816,9 @@ export class MgtSearchSuggestion extends MgtTemplatedComponent {
     );
   }
 
-  protected renderSuggestionEntityLabelFile() {
+  protected renderFileHeader() {
     return (
-      this.renderTemplate('search-suggestion-label-file', {}) ||
+      this.renderTemplate('suggestion-file-header', {}) ||
       html`
       <div class="suggestion-entity-label">
         Files
@@ -808,88 +827,150 @@ export class MgtSearchSuggestion extends MgtTemplatedComponent {
     );
   }
 
-  protected renderSuggestionEntityText(texts?: SuggestionText[]) {
-    texts = texts || this._foundTextSuggestion;
-    if (texts.length < 1) return html``;
-    const input = this.userInput;
-    return (
-      this.renderTemplate('search-suggestion-text', { texts }) ||
-      html`
-      ${repeat(texts, text => {
-        return html`
-          <div
-            class="suggestion-text-container suggestion-common-container"
-            id="${text.referenceId}"
-            @click="${e => this.onClickCallback(text)}"
-          >
-            <div class="suggestion-content-container">
-              <div class="suggestion-text-description">
-                <b>${text.text.slice(0, input.length)}</b><span>${text.text.slice(input.length)}</span>
-              </div>
-            </div>
-          </div>
-        `;
-      })}
-    `
-    );
+  protected renderCustomizedHeader(entityType: string) {
+    console.log('customized-' + entityType + '-header');
+    return this.renderTemplate('customized-' + entityType + '-header', null) || html``;
   }
 
-  protected renderSuggestionEntityPeople(people?: SuggestionPeople[]) {
-    return (
-      this.renderTemplate('search-suggestion-people', { people }) ||
-      html`
+  // rendering Querys / people / files / customized entities
+
+  protected renderQuerys(querys?: SuggestionQuery[]) {
+    querys = querys || this._foundQuerySuggestion;
+    if (querys.length < 1) return html``;
+
+    const input = this.userInput;
+    return html`
+      ${repeat(querys, query => {
+        return html`
+          <div
+            class="suggestion-query-container suggestion-common-container"
+            id="${query.referenceId}"
+            @click="${e => this.fireCustomEvent('onEntityClick', query)}"
+          >
+          ${this.renderQuery(query)}
+          </div>
+
+        `;
+      })}
+    `;
+  }
+
+  protected renderPeople(people?: SuggestionPeople[]) {
+    return html`
       ${repeat(people, person => {
         return html`
         <div
             class="suggestion-common-container"
             id="${person.referenceId}"
             @click="${e => {
-              this.onClickCallback(person);
+              this.fireCustomEvent('suggestionClick', person);
             }}"
           >
-          <mgt-person
-            .personDetails=${this.ConvertSuggestionPersonToIDynamicPerson(person)}
-            .fetchImage=${true}
-            class="mgt-search-suggestion-person-default"
-            view="threeLines"
-          ></mgt-person>
+          ${this.renderPerson(person)}
 
         </div>
         `;
       })}
-    `
-    );
+    `;
   }
 
-  protected renderSuggestionEntityFile(files?: SuggestionFile[]) {
-    return (
-      this.renderTemplate('search-suggestion-file', { files }) ||
-      html`
+  protected renderFiles(files?: SuggestionFile[]) {
+    return html`
       ${repeat(files, file => {
         return html`
           <div
             class="suggestion-common-container"
             id="${file.referenceId}"
             @click="${e => {
-              this.onClickCallback(file);
+              this.fireCustomEvent('suggestionClick', file);
             }}"
           >
-
-
-          <mgt-file
-            .fileDetails=${this.ConvertSuggestionFileToDriveItem(file)}
-            class="mgt-search-suggestion-file-default"
-          ></mgt-file>
-
+          ${this.renderFile(file)}
 
           </div>
         `;
       })}
-    `
+    `;
+  }
+
+  // render customized search results
+  protected renderCustomizedSearchResults(entityType: string, data) {
+    return html`
+      ${this.renderCustomizedHeader(entityType)}
+      ${this.renderCustomizedEntities(entityType, data)}
+      `;
+  }
+
+  protected renderCustomizedEntities(entityType: string, data: any[]) {
+    if (data.length < 1) return html``;
+    const input = this.userInput;
+    return html`
+      ${repeat(data, ele => {
+        return html`
+          <div
+            class="suggestion-common-container"
+            id="${ele.referenceId}"
+            @click="${e => this.fireCustomEvent('suggestionClick', ele)}"
+          >
+          ${this.renderCustomizedEntity(entityType, ele)}
+          </div>
+
+        `;
+      })}
+    `;
+  }
+
+  // render single query / file / person / customized entity
+
+  protected renderQuery(query?: SuggestionQuery) {
+    const input = this.userInput;
+    return (
+      this.renderTemplate('suggested-query', query, query.referenceId) ||
+      html`
+      <div class="suggestion-content-container">
+              <div class="suggestion-query-description">
+                <b>${query.query.slice(0, input.length)}</b><span>${query.query.slice(input.length)}</span>
+              </div>
+      </div>
+
+      `
     );
   }
 
-  // Covert Suggestion Entity to File/Text/People
+  protected renderPerson(person?: SuggestionPeople) {
+    const input = this.userInput;
+    return (
+      this.renderTemplate('suggested-person', person, person.referenceId) ||
+      html`
+          <mgt-person
+            .personDetails=${this.ConvertSuggestionPersonToIDynamicPerson(person)}
+            .fetchImage=${true}
+            class="mgt-suggestion-person-default"
+            view="threeLines"
+          ></mgt-person>
+      `
+    );
+  }
+
+  protected renderFile(file?: SuggestionFile) {
+    const input = this.userInput;
+    return (
+      this.renderTemplate('suggested-file', file, file.referenceId) ||
+      html`
+          <mgt-file
+            .fileDetails=${this.ConvertSuggestionFileToDriveItem(file)}
+            class="mgt-suggestion-file-default"
+          ></mgt-file>
+
+      `
+    );
+  }
+
+  protected renderCustomizedEntity(entityType: string, data: any) {
+    return this.renderTemplate('customized-' + entityType, data, data.referenceId) || html``;
+  }
+
+  // Covert Suggestion Entity to File/Query/People
 
   private ConvertSuggestionFileToDriveItem(file: SuggestionFile): DriveItem {
     let driveItem: DriveItem = {
@@ -911,5 +992,15 @@ export class MgtSearchSuggestion extends MgtTemplatedComponent {
       imAddress: person.imAddress
     };
     return dynamicPerson;
+  }
+
+  private isEmptySuggestion(): Boolean {
+    if (this._foundSuggestion == undefined) return true;
+    for (var suggestion of this._foundSuggestion) {
+      if (suggestion != null && suggestion.length > 0) {
+        return false;
+      }
+    }
+    return true;
   }
 }
