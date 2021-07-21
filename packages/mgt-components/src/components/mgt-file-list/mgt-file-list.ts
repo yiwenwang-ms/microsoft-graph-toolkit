@@ -13,9 +13,10 @@ import {
   ProviderState
 } from '@microsoft/mgt-element';
 import { DriveItem } from '@microsoft/microsoft-graph-types';
-import { customElement, html, property, TemplateResult } from 'lit-element';
+import { customElement, html, internalProperty, property, TemplateResult } from 'lit-element';
 import { repeat } from 'lit-html/directives/repeat';
 import {
+  clearFilesCache,
   fetchNextAndCacheForFilesPageIterator,
   getDriveFilesByIdIterator,
   getDriveFilesByPathIterator,
@@ -38,6 +39,8 @@ import { OfficeGraphInsightString, ViewType } from '../../graph/types';
 import { styles } from './mgt-file-list-css';
 import { strings } from './strings';
 import { MgtFile } from '../mgt-file/mgt-file';
+
+export { FluentDesignSystemProvider, FluentProgressRing } from '@fluentui/web-components';
 
 /**
  * The File List component displays a list of multiple folders and files by
@@ -68,6 +71,7 @@ import { MgtFile } from '../mgt-file/mgt-file';
  * @cssprop --show-more-button-padding - {String} Show more button padding
  * @cssprop --show-more-button-border-bottom-right-radius - {String} Show more button bottom right radius
  * @cssprop --show-more-button-border-bottom-left-radius - {String} Show more button bottom left radius
+ * @cssprop --progress-ring-size -{String} Progress ring height and width
  */
 
 @customElement('mgt-file-list')
@@ -399,6 +403,8 @@ export class MgtFileList extends MgtTemplatedComponent {
   // tracking user arrow key input of selection for accessibility purpose
   private _focusedItemIndex: number = -1;
 
+  @internalProperty() private _isLoadingMore: boolean;
+
   constructor() {
     super();
 
@@ -478,6 +484,7 @@ export class MgtFileList extends MgtTemplatedComponent {
           tabindex="0"
           @keydown="${this.onFileListKeyDown}"
           @keyup="${this.onFileListKeyUp}"
+          @blur="${this.onFileListOut}"
         >
           ${repeat(
             this.files,
@@ -509,7 +516,7 @@ export class MgtFileList extends MgtTemplatedComponent {
     const view = this.itemView;
     console.log(file);
     return (
-      this.renderTemplate('file', { file }) ||
+      this.renderTemplate('file', { file }, file.id) ||
       html`
         <mgt-file .fileDetails=${file} .view=${view} @click=${e => this.handleItemSelect(file, e)}></mgt-file>
       `
@@ -524,9 +531,11 @@ export class MgtFileList extends MgtTemplatedComponent {
    * @memberof MgtFileList
    */
   protected renderMoreFileButton(): TemplateResult {
-    if (this.isLoadingState) {
+    if (this._isLoadingMore) {
       return html`
-        <mgt-spinner></mgt-spinner>
+        <fluent-design-system-provider use-defaults>
+          <fluent-progress-ring role="progressbar" viewBox="0 0 8 8" class="progress-ring"></fluent-progress-ring>
+        </fluent-design-system-provider>
       `;
     } else {
       return html`<a id="show-more" class="show-more" @click=${() => this.renderNextPage()} tabindex="0" @keydown=${
@@ -559,13 +568,13 @@ export class MgtFileList extends MgtTemplatedComponent {
     if (event.code === 'Enter' || event.code === 'Space') {
       event.preventDefault();
 
-      focusedItem.classList.remove('selected');
-      focusedItem.classList.add('focused');
+      focusedItem?.classList.remove('selected');
+      focusedItem?.classList.add('focused');
     }
   }
 
   /**
-   * Handle accessibility keyboard keydown events (arrow up, arrow down, enter) on file list
+   * Handle accessibility keyboard keydown events (arrow up, arrow down, enter, tab) on file list
    *
    * @param event
    */
@@ -601,6 +610,21 @@ export class MgtFileList extends MgtTemplatedComponent {
 
       this.updateItemBackgroundColor(fileList, focusedItem, 'selected');
     }
+
+    if (event.code === 'Tab') {
+      focusedItem = fileList.children[this._focusedItemIndex];
+      focusedItem?.classList.remove('focused');
+    }
+  }
+
+  /**
+   * Remove accessibility keyboard focused when out of file list
+   *
+   */
+  private onFileListOut() {
+    const fileList = this.renderRoot.querySelector('.file-list');
+    const focusedItem = fileList.children[this._focusedItemIndex];
+    focusedItem?.classList.remove('focused');
   }
 
   /**
@@ -738,9 +762,10 @@ export class MgtFileList extends MgtTemplatedComponent {
       const li = event.target.closest('li');
       const index = nodes.indexOf(li);
       this._focusedItemIndex = index;
-      const focusedItem = fileList.children[this._focusedItemIndex];
 
-      this.updateItemBackgroundColor(fileList, focusedItem, 'focused');
+      for (let i = 0; i < fileList.children.length; i++) {
+        fileList.children[i].classList.remove('focused');
+      }
     }
   }
 
@@ -751,28 +776,6 @@ export class MgtFileList extends MgtTemplatedComponent {
    * @memberof MgtFileList
    */
   protected async renderNextPage() {
-    const root = this.renderRoot.querySelector('file-list-wrapper');
-    if (root && root.animate) {
-      // play back
-      root.animate(
-        [
-          {
-            height: 'auto',
-            transformOrigin: 'top left'
-          },
-          {
-            height: 'auto',
-            transformOrigin: 'top left'
-          }
-        ],
-        {
-          duration: 1000,
-          easing: 'ease-in-out',
-          fill: 'both'
-        }
-      );
-    }
-
     // render next page from cache if exists, or else use iterator
     if (this._preloadedFiles.length > 0) {
       this.files = [
@@ -781,7 +784,30 @@ export class MgtFileList extends MgtTemplatedComponent {
       ];
     } else {
       if (this.pageIterator.hasNext) {
+        this._isLoadingMore = true;
+        const root = this.renderRoot.querySelector('file-list-wrapper');
+        if (root && root.animate) {
+          // play back
+          root.animate(
+            [
+              {
+                height: 'auto',
+                transformOrigin: 'top left'
+              },
+              {
+                height: 'auto',
+                transformOrigin: 'top left'
+              }
+            ],
+            {
+              duration: 1000,
+              easing: 'ease-in-out',
+              fill: 'both'
+            }
+          );
+        }
         await fetchNextAndCacheForFilesPageIterator(this.pageIterator);
+        this._isLoadingMore = false;
         this.files = this.pageIterator.value;
       }
     }
@@ -820,5 +846,19 @@ export class MgtFileList extends MgtTemplatedComponent {
       focusedItem.classList.add(className);
       focusedItem.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' });
     }
+  }
+
+  /**
+   * Handle reload of File List and condition to clear cache
+   *
+   * @param clearCache boolean, if true clear cache
+   */
+  public reload(clearCache = false) {
+    if (clearCache) {
+      // clear cache File List
+      clearFilesCache();
+    }
+
+    this.requestStateUpdate(true);
   }
 }

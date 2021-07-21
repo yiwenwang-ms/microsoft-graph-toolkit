@@ -136,9 +136,10 @@ export type PersonCardProps = {
 	isExpanded?: boolean;
 	inheritDetails?: boolean;
 	showPresence?: boolean;
-	personPresence?: MicrosoftGraphBeta.Presence;
+	personPresence?: MicrosoftGraph.Presence;
 	templateContext?: TemplateContext;
 	mediaQuery?: ComponentMediaQuery;
+	expanded?: (e: Event) => void;
 	templateRendered?: (e: Event) => void;
 }
 
@@ -152,7 +153,7 @@ export type PersonProps = {
 	personImage?: string;
 	fetchImage?: boolean;
 	avatarType?: string;
-	personPresence?: MicrosoftGraphBeta.Presence;
+	personPresence?: MicrosoftGraph.Presence;
 	personCardInteraction?: PersonCardInteraction;
 	line1Property?: string;
 	line2Property?: string;
@@ -233,5 +234,3 @@ export const TeamsChannelPicker = wrapMgt<TeamsChannelPickerProps>('mgt-teams-ch
 
 export const Todo = wrapMgt<TodoProps>('mgt-todo');
 
-export { OfficeGraphInsightString,ViewType,ResponseType,IDynamicPerson,PersonType,GroupType,UserType,PersonCardInteraction,MgtPersonConfig,AvatarSize,PersonViewType,TasksStringResource,TasksSource,TaskFilter,SelectedChannel,TodoFilter } from '@microsoft/mgt-components';
-export { TemplateContext,ComponentMediaQuery } from '@microsoft/mgt-element';
